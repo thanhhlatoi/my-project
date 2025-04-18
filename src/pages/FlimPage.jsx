@@ -1,6 +1,7 @@
 // src/pages/FlimPage.jsx
 import React, { useEffect, useState } from 'react';
 import FilmService from '../api/FilmService.js';
+import Layout from '../layouts/layout.jsx';
 
 const FlimPage = () => {
     const [movies, setMovies] = useState([]);
@@ -22,7 +23,7 @@ const FlimPage = () => {
     }, [page]);
 
     return (
-        <div className="p-4">
+        <Layout>
             <h1 className="text-2xl font-bold mb-4">Danh sách phim</h1>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {movies.map((movie) => (
@@ -59,7 +60,7 @@ const FlimPage = () => {
                     Sau
                 </button>
             </div>
-        </div>
+        </Layout>
     );
 };
 

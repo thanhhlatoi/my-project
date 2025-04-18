@@ -7,7 +7,7 @@ import {
   import { useNavigate } from "react-router-dom";
   import { useState } from "react";
 
-  const Sidebar = ({ isOpen = true, toggleSidebar }) => {
+  const Sidebar = ({ isOpen, toggleSidebar }) => {
     const [active, setActive] = useState("Dashboard");
     const navigate = useNavigate();
 

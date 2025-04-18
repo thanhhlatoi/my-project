@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import GenreService from '../api/GenreService.js';
+import Layout from '../layouts/layout.jsx';
 
 const Genre = () => {
   const [genres, setGenres] = useState([]);
@@ -78,7 +79,7 @@ const Genre = () => {
   };
 
   return (
-    <div className="p-6">
+    <Layout>
       <h2 className="text-2xl font-bold mb-4">Quản lý Thể Loại Phim</h2>
 
       {/* Nút thêm thể loại, mở Modal */}
@@ -217,7 +218,7 @@ const Genre = () => {
           Sau
         </button>
       </div>
-    </div>
+    </Layout>
   );
 };
 
