@@ -1,6 +1,8 @@
 import axios from 'axios';
+import { BASE_URL } from "./config.js";
 
-const API_URL = 'http://192.168.100.193:8082/api/category';
+
+const API_URL = `${BASE_URL}/api/category`;
 
 // Hàm lấy token từ localStorage (hoặc sessionStorage, hoặc state)
 const getAuthToken = () => {

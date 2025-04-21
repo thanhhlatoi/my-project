@@ -2,7 +2,7 @@ import React, { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { BASE_URL } from "../api/config.js";
 
-const CreateAuthor = ({
+const CreatePerformer = ({
                           isOpen,
                           closeModal,
                           newAuthor = {}, // Đặt giá trị mặc định là object rỗng
@@ -37,7 +37,13 @@ const CreateAuthor = ({
             const objectUrl = URL.createObjectURL(file);
             setAvatarPreview(objectUrl);
 
-
+            // Ở đây bạn có thể thêm code để upload file lên server
+            // Ví dụ:
+            // const formData = new FormData();
+            // formData.append('file', file);
+            // axios.post('/api/upload', formData).then(res => {
+            //     setNewAuthor({ ...author, avatar: res.data.path });
+            // });
 
             // Tạm thời chỉ cập nhật filename để demo
             setNewAuthor({ ...author, avatar: `avatars/${file.name}` });
@@ -96,7 +102,7 @@ const CreateAuthor = ({
                                                     src={avatarPreview}
                                                     alt="Avatar Preview"
                                                     className="w-full h-full object-cover"
-
+                                                    onError={(e) => e.target.src = '/api/placeholder/120/120'}
                                                 />
                                             ) : (
                                                 <svg className="w-12 h-12 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
@@ -227,4 +233,4 @@ const CreateAuthor = ({
     );
 };
 
-export default CreateAuthor;
+export default CreatePerformer;

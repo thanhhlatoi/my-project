@@ -3,9 +3,14 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from "react-route
 import LoginForm from "./pages/LoginForm";
 import HomePage from "./pages/HomePage";
 import Genre from "./pages/Genre";
+import Author from "./pages/AuthorPage";
+import Performer from "./pages/PerformerPage";
 import Sidebar from "./components/Sidebar";
 import FilmPage from "./pages/FlimPage.jsx";
 import './App.css'
+import FilmDetail from "./components/FilmDetail.jsx";
+import FilmWatch from "./components/FilmWatch.jsx";
+import CreateFilm from "./components/CreateFilm.jsx";
 
 function App() {
     // Kiểm tra xem có đang ở trang login hay không
@@ -23,6 +28,12 @@ function App() {
                     <Route path="/home" element={<HomePage />} />
                     <Route path="/genre" element={<Genre />} />
                     <Route path="/flimPage" element={<FilmPage />} />
+                    <Route path="/film/:id" element={<FilmDetail />} />
+                    <Route path="/movies" element={<FilmWatch />} />
+                    <Route path="/createfilm/:id" element={<CreateFilm />} />
+                    <Route path="/author" element={<Author />} />
+                    <Route path="/performer" element={<Performer />} />
+
                 </Routes>
             </main>
         </div>

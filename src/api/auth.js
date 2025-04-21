@@ -1,4 +1,8 @@
-const API_URL = "http://192.168.100.193:8082/auth/login";
+import { BASE_URL } from "./config.js";
+
+
+const API_URL = `${BASE_URL}/auth/login`;
+
 
 export const login = async (email, password) => {
     // eslint-disable-next-line no-useless-catch

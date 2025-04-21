@@ -1,61 +1,62 @@
 import axios from 'axios';
-
-const API_URL = 'http://192.168.100.193:8082/api/movieProduct';
+import { BASE_URL } from "./config.js";
+const API_URL = `${BASE_URL}/api/movieProduct`;
 
 // Hàm lấy token từ localStorage (hoặc sessionStorage, hoặc state)
 const getAuthToken = () => {
     return localStorage.getItem('authToken');  // Hoặc bạn có thể thay đổi nơi lưu trữ token của bạn
 };
 
+// Hàm chung để thực hiện các request với token
+const request = async (method, url, data = null, params = null) => {
+    const token = getAuthToken();  // Lấy token từ nơi lưu trữ
+
+    try {
+        const response = await axios({
+            method,
+            url: `${API_URL}${url}`,
+            data,
+            params,
+            headers: {
+                Authorization: `Bearer ${token}`  // Thêm token vào header
+            }
+        });
+        return response.data; // Trả về dữ liệu response
+    } catch (error) {
+        console.error("Lỗi khi gọi API:", error);
+        throw error; // Ném lỗi để caller có thể xử lý
+    }
+};
+
+// Hàm gọi API lấy danh sách phim
 const getAll = (page = 0, limit = 10, sortBy = 'id', order = 'asc') => {
-    const token = getAuthToken();  // Lấy token từ nơi lưu trữ
-
-    return axios.get(API_URL, {
-        params: {
-            page,
-            limit,
-            sortBy,
-            order
-        },
-        headers: {
-            Authorization: `Bearer ${token}`  // Thêm token vào header
-        }
-    });
+    return request('get', '', null, { page, limit, sortBy, order });
 };
 
+// Hàm thêm phim mới
 const add = (film) => {
-    const token = getAuthToken();  // Lấy token từ nơi lưu trữ
-
-    return axios.post(API_URL, film, {
-        headers: {
-            Authorization: `Bearer ${token}`  // Thêm token vào header
-        }
-    });
+    return request('post', '', film);
 };
 
+// Hàm cập nhật phim
 const update = (film) => {
-    const token = getAuthToken();  // Lấy token từ nơi lưu trữ
-
-    return axios.put(`${API_URL}/update/${film.id}`, film, {
-        headers: {
-            Authorization: `Bearer ${token}`  // Thêm token vào header
-        }
-    });
+    return request('put', `/update/${film.id}`, film);
 };
 
+// Hàm xóa thể loại phim
 const deleteGenre = (id) => {
-    const token = getAuthToken();  // Lấy token từ nơi lưu trữ
+    return request('delete', `/${id}`);
+};
 
-    return axios.delete(`${API_URL}/${id}`, {
-        headers: {
-            Authorization: `Bearer ${token}`  // Thêm token vào header
-        }
-    });
+// Hàm lấy chi tiết phim theo ID
+const getById = (id) => {
+    return request('get', `/${id}`);
 };
 
 export default {
     getAll,
     add,
     update,
-    delete: deleteGenre
+    delete: deleteGenre,
+    getById  // Đảm bảo thêm hàm getById vào export
 };
