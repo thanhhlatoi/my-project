@@ -1,65 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../layouts/layout.jsx';
-import CreatePerformer from '../components/CreatePerformer.jsx';
-import PerformerDetails from '../components/PerformerDetails.jsx';
+import CreatePerformer from '../components/Create/CreatePerformer.jsx';
+import PerformerDetails from '../components/Update/PerformerDetails.jsx';
 import PerformerService from '../api/PerformerService.js';
 import { BASE_URL } from "../api/config.js";
+import Pagination from '../components/Pagination';
 
 
 const PerformerPage = () => {
     // States
-    const [authors, setAuthors] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(0);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [authorsPerPage, setAuthorsPerPage] = useState(8);
+    const [performer, setPerformer] = useState([]);
+    //phan trang
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+    const [ loading,setLoading] = useState(false);
 
     // Modal states
     const [isOpen, setIsOpen] = useState(false);
     const [selectedAuthor, setSelectedAuthor] = useState(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [newAuthor, setNewAuthor] = useState({
+    const [newPerformer, setNewPerformer] = useState({
         fullName: '',
         avatar: '',
         birthday: '',
         country: '',
-        gender: true,
-        describe: ''
+        gender: '',
+        description: ''
     });
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [authorToDelete, setAuthorToDelete] = useState(null);
 
     // Hàm fetch dữ liệu - đơn giản hóa giống FlimPage
     const fetchData = async () => {
-        setIsLoading(true);
+        setLoading(true);
         try {
-            const response = await PerformerService.getAll(
-                currentPage - 1,
-                authorsPerPage,
-                'id',
-                'asc',
-                searchTerm
-            );
-
-            if (response && response.data) {
-                setAuthors(response.data.content);
-                setTotalPages(response.data.totalPages);
-            }
-        } catch (err) {
-            setError("Failed to load authors. Please try again later.");
-            console.error("Error fetching authors:", err);
+            // Nếu có từ khóa tìm kiếm, truyền vào API
+            const response = await PerformerService.getAll(page, 10, 'id', 'asc');
+            setPerformer(response.data.content);
+            setTotalPages(response.data.totalPages);
+        } catch (error) {
+            console.error("Lỗi khi lấy danh sách phim:", error);
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
     // Gọi API khi các tham số thay đổi
+    // Gọi API khi các tham số thay đổi
     useEffect(() => {
         fetchData();
-    }, [currentPage, authorsPerPage, searchTerm]);
+    }, [page]);
 
     // Dialog handlers
     const openDialog = (author) => {
@@ -75,7 +66,7 @@ const PerformerPage = () => {
     // Modal handlers
     const openAddModal = () => {
         setIsEditing(false);
-        setNewAuthor({
+        setNewPerformer({
             fullName: '',
             avatar: '',
             birthday: '',
@@ -96,7 +87,7 @@ const PerformerPage = () => {
             editableAuthor.birthday = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
         }
 
-        setNewAuthor(editableAuthor);
+        setNewPerformer(editableAuthor);
         setIsEditing(true);
         setIsAddModalOpen(true);
     };
@@ -110,8 +101,8 @@ const PerformerPage = () => {
         try {
             // Format the birthday in ISO format if it's provided
             const formattedAuthor = {
-                ...newAuthor,
-                birthday: newAuthor.birthday ? new Date(newAuthor.birthday).toISOString() : null
+                ...newPerformer,
+                birthday: newPerformer.birthday ? new Date(newPerformer.birthday).toISOString() : null
             };
 
             if (isEditing) {
@@ -161,61 +152,16 @@ const PerformerPage = () => {
         return date.toLocaleDateString();
     };
 
-    // Tạo mảng các trang cho phân trang
-    const getPaginationRange = () => {
-        const range = [];
 
-        if (totalPages <= 5) {
-            for (let i = 1; i <= totalPages; i++) {
-                range.push(i);
-            }
-            return range;
-        }
-
-        // Always show first and last page
-        range.push(1);
-
-        // Calculate middle range
-        let startPage = Math.max(2, currentPage - 1);
-        let endPage = Math.min(totalPages - 1, currentPage + 1);
-
-        // Add ellipsis if needed
-        if (startPage > 2) {
-            range.push('...');
-        }
-
-        // Add middle pages
-        for (let i = startPage; i <= endPage; i++) {
-            range.push(i);
-        }
-
-        // Add ellipsis if needed
-        if (endPage < totalPages - 1) {
-            range.push('...');
-        }
-
-        // Add last page if not already added
-        if (totalPages > 1) {
-            range.push(totalPages);
-        }
-
-        return range;
-    };
     return (
         <Layout>
             <div className="max-w-6xl mx-auto py-10 px-4">
-                <h1 className="text-3xl font-bold text-blue-700 mb-6">📚 Author List</h1>
+                <h1 className="text-3xl font-bold text-blue-700 mb-6">Performer List</h1>
 
                 {/* Search and display options */}
                 <div className="flex flex-wrap justify-between mb-6 gap-4">
                     <div className="relative w-full max-w-md">
-                        <input
-                            type="text"
-                            className="p-2 pl-8 border rounded w-full"
-                            placeholder="Search authors by name or country..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+
                         <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
                             <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -223,22 +169,6 @@ const PerformerPage = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center">
-                        <label className="mr-2">Authors per page:</label>
-                        <select
-                            value={authorsPerPage}
-                            onChange={(e) => {
-                                setAuthorsPerPage(parseInt(e.target.value));
-                                setCurrentPage(1); // Reset to page 1 when changing items per page
-                            }}
-                            className="p-2 border rounded"
-                        >
-                            <option value="4">4</option>
-                            <option value="8">8</option>
-                            <option value="12">12</option>
-                            <option value="20">20</option>
-                        </select>
-                    </div>
                 </div>
 
                 {/* Add author button */}
@@ -252,15 +182,10 @@ const PerformerPage = () => {
                     Add Author
                 </button>
 
-                {/* Error message */}
-                {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 flex items-start">
-                        <p>{error}</p>
-                    </div>
-                )}
+
 
                 {/* Loading indicator */}
-                {isLoading ? (
+                {loading ? (
                     <div className="flex justify-center my-8">
                         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-700"></div>
                     </div>
@@ -268,7 +193,7 @@ const PerformerPage = () => {
                     <>
                         {/* Authors grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {authors.map((author) => (
+                            {performer.map((author) => (
                                 <div
                                     key={author.id || author.fullName}
                                     className="bg-white rounded-xl shadow-md hover:shadow-lg transition duration-300 p-4 flex flex-col items-center"
@@ -283,7 +208,6 @@ const PerformerPage = () => {
                                                 src={author.avatar ? `${BASE_URL}/api/videos/view?bucketName=thanh&path=${author.avatar}` : '/api/placeholder/120/120'}
                                                 alt={author.fullName}
                                                 className="w-24 h-24 rounded-full border object-cover"
-                                                onError={(e) => e.target.src = '/api/placeholder/120/120'}
                                             />
                                         </div>
                                         <h2 className="text-lg font-semibold text-gray-800 text-center">{author.fullName}</h2>
@@ -324,73 +248,28 @@ const PerformerPage = () => {
                         </div>
 
                         {/* No results message */}
-                        {authors.length === 0 && (
+                        {performer.length === 0 && (
                             <div className="text-center py-12 bg-gray-50 rounded-lg">
                                 <p className="text-gray-500 mt-4">No authors found matching your search.</p>
-                                {searchTerm && (
-                                    <button
-                                        onClick={() => setSearchTerm('')}
-                                        className="mt-2 text-blue-600 hover:underline"
-                                    >
-                                        Clear search
-                                    </button>
-                                )}
+
                             </div>
                         )}
                     </>
                 )}
 
                 {/* Pagination */}
-                {!isLoading && !error && totalPages > 1 && (
-                    <div className="mt-8 flex justify-center">
-                        <button
-                            onClick={() => setCurrentPage(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className="px-4 py-2 mx-1 rounded bg-gray-200 text-gray-600 disabled:opacity-50 flex items-center"
-                        >
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
-                            </svg>
-                            Prev
-                        </button>
-
-                        {getPaginationRange().map((page, index) => (
-                            page === '...' ? (
-                                <span key={`ellipsis-${index}`} className="px-2 py-2 mx-1 flex items-center justify-center">...</span>
-                            ) : (
-                                <button
-                                    key={`page-${page}`}
-                                    onClick={() => setCurrentPage(page)}
-                                    className={`px-4 py-2 mx-1 rounded ${
-                                        currentPage === page
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-gray-200 hover:bg-gray-300'
-                                    }`}
-                                >
-                                    {page}
-                                </button>
-                            )
-                        ))}
-
-                        <button
-                            onClick={() => setCurrentPage(currentPage + 1)}
-                            disabled={currentPage === totalPages}
-                            className="px-4 py-2 mx-1 rounded bg-gray-200 text-gray-600 disabled:opacity-50 flex items-center"
-                        >
-                            Next
-                            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </button>
-                    </div>
-                )}
+                <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={(newPage) => setPage(newPage)}
+                />
 
                 {/* Sử dụng component CreateAuthor */}
                 <CreatePerformer
                     isOpen={isAddModalOpen}
                     closeModal={closeAddModal}
-                    newAuthor={newAuthor}
-                    setNewAuthor={setNewAuthor}
+                    newAuthor={newPerformer}
+                    setNewAuthor={setNewPerformer}
                     handleSubmit={handleSubmit}
                     isEditing={isEditing}
                 />

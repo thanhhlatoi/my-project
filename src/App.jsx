@@ -10,8 +10,7 @@ import FilmPage from "./pages/FlimPage.jsx";
 import './App.css'
 import FilmDetail from "./components/FilmDetail.jsx";
 import FilmWatch from "./components/FilmWatch.jsx";
-import CreateFilm from "./components/CreateFilm.jsx";
-
+import User from "./pages/UserPage";
 function App() {
     // Kiểm tra xem có đang ở trang login hay không
     const location = useLocation();
@@ -30,10 +29,9 @@ function App() {
                     <Route path="/flimPage" element={<FilmPage />} />
                     <Route path="/film/:id" element={<FilmDetail />} />
                     <Route path="/movies" element={<FilmWatch />} />
-                    <Route path="/createfilm/:id" element={<CreateFilm />} />
                     <Route path="/author" element={<Author />} />
                     <Route path="/performer" element={<Performer />} />
-
+                    <Route path="/user" element={<User />} />
                 </Routes>
             </main>
         </div>

@@ -2,7 +2,7 @@ import axios from 'axios';
 import { BASE_URL } from "./config.js";
 
 
-const API_URL = `${BASE_URL}/api/category`;
+const API_URL = `${BASE_URL}/api/genre`;
 
 // Hàm lấy token từ localStorage (hoặc sessionStorage, hoặc state)
 const getAuthToken = () => {

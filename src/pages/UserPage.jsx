@@ -7,7 +7,7 @@ import AuthorDetails from '../components/Update/AuthorDetails.jsx';
 import Pagination from '../components/Pagination';
 import { BASE_URL } from "../api/config.js";
 
-const AuthorsPage = () => {
+const UserPage = () => {
     // States
     const [authors, setAuthors] = useState([]);
     //phan trang
@@ -71,8 +71,15 @@ const AuthorsPage = () => {
     // Modal handlers
     const openAddModal = () => {
         setIsEditing(false);
+        setNewAuthor({
+            fullName: '',
+            avatar: '',
+            birthday: '',
+            country: '',
+            gender: true,
+            describe: ''
+        });
         setIsAddModalOpen(true);
-        fetchData();
     };
 
     const openEditModal = (author) => {
@@ -88,12 +95,10 @@ const AuthorsPage = () => {
         setNewAuthor(editableAuthor);
         setIsEditing(true);
         setIsAddModalOpen(true);
-        fetchData();
     };
 
     const closeAddModal = () => {
         setIsAddModalOpen(false);
-        fetchData();
     };
 
     // Handle form submission for adding or updating author
@@ -148,7 +153,7 @@ const AuthorsPage = () => {
     return (
         <Layout>
             <div className="max-w-6xl mx-auto py-10 px-4">
-                <h1 className="text-3xl font-bold text-blue-700 mb-6">Author List</h1>
+                <h1 className="text-3xl font-bold text-blue-700 mb-6">User List</h1>
 
                 {/* Search and display options */}
                 <div className="flex flex-wrap justify-between mb-6 gap-4">
@@ -318,4 +323,4 @@ const AuthorsPage = () => {
     );
 };
 
-export default AuthorsPage;
+export default UserPage;

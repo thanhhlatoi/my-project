@@ -1,8 +1,8 @@
 import React, { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { BASE_URL } from "../api/config.js";
+import { BASE_URL } from "../../api/config.js";
 
-const AuthorDetails = ({
+const PerformerDetails = ({
                            isOpen,
                            closeDialog,
                            selectedAuthor,
@@ -112,4 +112,4 @@ const AuthorDetails = ({
     );
 };
 
-export default AuthorDetails;
+export default PerformerDetails;

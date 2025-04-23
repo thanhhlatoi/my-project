@@ -23,6 +23,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         { name: "Genre", icon: <Tags size={20} />, path: "/genre" },
         { name: "Author", icon: <BookOpen size={20} />, path: "/author" },
         { name: "Performer", icon: <User size={20} />, path: "/performer" },
+        { name: "User", icon: <Users size={20} />, path: "/user" },
     ];
 
     const pages = [

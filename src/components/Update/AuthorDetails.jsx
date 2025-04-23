@@ -1,8 +1,8 @@
 import React, { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { BASE_URL } from "../api/config.js";
+import { BASE_URL } from "../../api/config.js";
 
-const PerformerDetails = ({
+const AuthorDetails = ({
                            isOpen,
                            closeDialog,
                            selectedAuthor,
@@ -47,7 +47,6 @@ const PerformerDetails = ({
                                     src={selectedAuthor.avatar ? `${BASE_URL}/api/videos/view?bucketName=thanh&path=${selectedAuthor.avatar}` : '/api/placeholder/120/120'}
                                     alt={selectedAuthor.fullName}
                                     className="w-24 h-24 rounded-full border object-cover"
-                                    onError={(e) => e.target.src = '/api/placeholder/120/120'}
                                 />
 
                                 <h2 className="text-2xl font-semibold text-center mt-3">{selectedAuthor.fullName}</h2>
@@ -113,4 +112,4 @@ const PerformerDetails = ({
     );
 };
 
-export default PerformerDetails;
+export default AuthorDetails;

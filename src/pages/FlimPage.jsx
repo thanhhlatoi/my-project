@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import FilmService from '../api/FilmService.js';
 import Layout from '../layouts/layout.jsx';
 import { BASE_URL } from "../api/config.js";
-import CreateFilm from '../components/CreateFilm.jsx'; // Import CreateFilm
+import CreateFilm from '../components/Create/CreateFilm.jsx'; // Import CreateFilm
 
 const FlimPage = () => {
     const [movies, setMovies] = useState([]);
