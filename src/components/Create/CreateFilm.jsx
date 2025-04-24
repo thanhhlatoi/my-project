@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import GenreService from "../../api/GenreService.js";
 import PerformerService from "../../api/PerformerService.js";
+import AuthorService from "../../api/AuthorService.js";
 
 // Component UI cơ bản
 const InputField = ({ label, ...props }) => (
@@ -92,69 +93,115 @@ const MultiSelectSection = ({
                                 loading,
                                 placeholder,
                                 emptyMessage
-                            }) => (
-    <div className={`p-4 ${bgColor} rounded-lg border border-${bgColor.split('-')[1]}-100`}>
-        <h4 className={`font-medium text-${bgColor.split('-')[1]}-700 mb-3`}>{title}</h4>
-        <div className="flex space-x-2 mb-3">
-            <select
-                value={selectedValue}
-                onChange={(e) => setSelectedValue(e.target.value)}
-                className="flex-grow px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 cursor-pointer"
-                disabled={loading}
-            >
-                <option value="">{placeholder}</option>
-                {items && items.length > 0 ? (
-                    items.map(item => (
-                        <option key={item.id} value={item.id}>
-                            {item.name || item.fullName}
-                        </option>
-                    ))
-                ) : (
-                    <option value="" disabled>Đang tải dữ liệu...</option>
-                )}
-            </select>
-            <button
-                type="button"
-                onClick={onAdd}
-                className={`px-4 py-2 bg-${bgColor.split('-')[1]}-600 text-white rounded-lg hover:bg-${bgColor.split('-')[1]}-700 disabled:bg-${bgColor.split('-')[1]}-300 transition-colors duration-200 flex-shrink-0`}
-                disabled={!selectedValue || loading}
-            >
-                Thêm
-            </button>
-        </div>
+                            }) => {
+    // Xác định các class dựa trên bgColor
+    let bgClasses = "bg-gray-50";
+    let buttonClasses = "bg-gray-600 hover:bg-gray-700 disabled:bg-gray-300";
+    let textClasses = "text-gray-700";
+    let borderClasses = "border-gray-100";
 
-        {/* Hiển thị trạng thái loading */}
-        {loading && (
-            <div className={`flex items-center text-${bgColor.split('-')[1]}-600 text-sm`}>
-                <svg className={`animate-spin -ml-1 mr-2 h-4 w-4 text-${bgColor.split('-')[1]}-600`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Đang tải dữ liệu...</span>
+    // Dựa vào bgColor để xác định các class cụ thể
+    if (bgColor === "bg-purple-50") {
+        bgClasses = "bg-purple-50";
+        buttonClasses = "bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300";
+        textClasses = "text-purple-700";
+        borderClasses = "border-purple-100";
+    } else if (bgColor === "bg-red-50") {
+        bgClasses = "bg-red-50";
+        buttonClasses = "bg-red-600 hover:bg-red-700 disabled:bg-red-300";
+        textClasses = "text-red-700";
+        borderClasses = "border-red-100";
+    } else if (bgColor === "bg-blue-50") {
+        bgClasses = "bg-blue-50";
+        buttonClasses = "bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300";
+        textClasses = "text-blue-700";
+        borderClasses = "border-blue-100";
+    }
+
+    return (
+        <div className={`p-4 ${bgClasses} rounded-lg border ${borderClasses}`}>
+            <h4 className={`font-medium ${textClasses} mb-3`}>{title}</h4>
+            <div className="flex space-x-2 mb-3">
+                <select
+                    value={selectedValue}
+                    onChange={(e) => setSelectedValue(e.target.value)}
+                    className="flex-grow px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 cursor-pointer"
+                    disabled={loading}
+                >
+                    <option value="">{placeholder}</option>
+                    {items && items.length > 0 ? (
+                        items.map(item => (
+                            <option key={item.id} value={item.id}>
+                                {item.name || item.fullName}
+                            </option>
+                        ))
+                    ) : (
+                        <option value="" disabled>Đang tải dữ liệu...</option>
+                    )}
+                </select>
+                <button
+                    type="button"
+                    onClick={onAdd}
+                    className={`px-4 py-2 ${buttonClasses} text-white rounded-lg transition-colors duration-200 flex-shrink-0`}
+                    disabled={!selectedValue || loading}
+                >
+                    Thêm
+                </button>
             </div>
-        )}
 
-        {/* Danh sách đã chọn */}
-        <div className="mt-3">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Đã chọn:</label>
-            <SelectedItems
-                items={selectedItems}
-                onRemove={onRemove}
-                emptyMessage={emptyMessage}
-            />
+            {/* Hiển thị trạng thái loading */}
+            {loading && (
+                <div className={`flex items-center ${textClasses} text-sm`}>
+                    <svg className={`animate-spin -ml-1 mr-2 h-4 w-4 ${textClasses}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Đang tải dữ liệu...</span>
+                </div>
+            )}
+
+            {/* Danh sách đã chọn */}
+            <div className="mt-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Đã chọn:</label>
+                <SelectedItems
+                    items={selectedItems}
+                    onRemove={onRemove}
+                    emptyMessage={emptyMessage}
+                />
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 // Component form section
-const FormSection = ({ title, bgColor, children }) => (
-    <div className={`p-4 ${bgColor} rounded-lg border border-${bgColor.split('-')[1]}-100`}>
-        <h4 className={`font-medium text-${bgColor.split('-')[1]}-700 mb-3`}>{title}</h4>
-        <div className="space-y-4">
-            {children}
+const FormSection = ({ title, bgColor, children }) => {
+    // Xác định các class dựa trên bgColor
+    let textClass = "text-gray-700";
+    let borderClass = "border-gray-100";
+
+    if (bgColor === "bg-blue-50") {
+        textClass = "text-blue-700";
+        borderClass = "border-blue-100";
+    } else if (bgColor === "bg-green-50") {
+        textClass = "text-green-700";
+        borderClass = "border-green-100";
+    } else if (bgColor === "bg-yellow-50") {
+        textClass = "text-yellow-700";
+        borderClass = "border-yellow-100";
+    } else if (bgColor === "bg-gray-50") {
+        textClass = "text-gray-700";
+        borderClass = "border-gray-100";
+    }
+
+    return (
+        <div className={`p-4 ${bgColor} rounded-lg border ${borderClass}`}>
+            <h4 className={`font-medium ${textClass} mb-3`}>{title}</h4>
+            <div className="space-y-4">
+                {children}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 // Component chính
 const CreateFilm = ({ onClose }) => {
@@ -177,25 +224,21 @@ const CreateFilm = ({ onClose }) => {
         performer: []
     });
 
-    // Danh sách tác giả (hard-coded)
-    const authorsList = [
-        { id: 1, fullName: "Nguyễn Văn A" },
-        { id: 2, fullName: "Trần Thị B" },
-        { id: 3, fullName: "Lê Văn C" }
-    ];
+
 
     // State cho danh sách dữ liệu từ API
     const [genresList, setGenresList] = useState([]);
     const [performerList, setPerformerList] = useState([]);
-
+    const [authorList, setAuthorList] = useState([]);
     // State cho giá trị đang chọn
     const [selectedPerformer, setSelectedPerformer] = useState("");
     const [selectedGenre, setSelectedGenre] = useState("");
-
+    const [selectedAuthor, setSelectedAuthor] = useState("");
     // State cho trạng thái loading
     const [loading, setLoading] = useState(false);
     const [loadingGenres, setLoadingGenres] = useState(false);
     const [loadingPerformers, setLoadingPerformers] = useState(false);
+    const [loadingAuthor, setLoadingAuthor] = useState(false);
 
     // State cho thông báo lỗi
     const [error, setError] = useState('');
@@ -207,7 +250,7 @@ const CreateFilm = ({ onClose }) => {
             try {
                 const response = await GenreService.getAll(0, 100, 'id', 'asc');
                 const genresArray = response?.data?.data?.content;
-
+                console.log(response);
                 if (Array.isArray(genresArray)) {
                     setGenresList(genresArray);
                 } else {
@@ -224,7 +267,8 @@ const CreateFilm = ({ onClose }) => {
             setLoadingPerformers(true);
             try {
                 const response = await PerformerService.getAll(0, 100, 'id', 'asc');
-                const performerArray = response?.data?.data?.content;
+                const performerArray = response?.data?.data?.content; // <-- response.data chính là content
+                console.log(response);
 
                 if (Array.isArray(performerArray)) {
                     setPerformerList(performerArray);
@@ -238,9 +282,28 @@ const CreateFilm = ({ onClose }) => {
             }
         };
 
+        const fetchAuthor = async () => {
+            setLoadingAuthor(true);
+            try {
+                const response = await AuthorService.getAll(0, 100, 'id', 'asc');
+                console.log('Author response:', response);
+
+                // Kiểm tra cấu trúc response và trích xuất dữ liệu
+                if (response?.data?.data?.content) {
+                    setAuthorList(response.data.data.content);
+                } else {
+                    setAuthorList([]);
+                }
+            } catch (error) {
+                console.error('Lỗi khi lấy danh sách tác giả:', error);
+            } finally {
+                setLoadingAuthor(false); // Sửa lại từ setLoadingPerformers
+            }
+        };
+
         // Gọi cả hai API đồng thời
         setLoading(true);
-        Promise.all([fetchGenres(), fetchPerformer()])
+        Promise.all([fetchGenres(), fetchPerformer(),fetchAuthor()])
             .finally(() => setLoading(false));
     }, []);
 
@@ -452,24 +515,48 @@ const CreateFilm = ({ onClose }) => {
                         <FormSection title="Thông tin tác giả" bgColor="bg-yellow-50">
                             <SelectField
                                 label="Tác giả"
-                                value={newMovie.authorId || ''}
+                                value={selectedAuthor}
                                 onChange={(e) => {
-                                    const authorId = parseInt(e.target.value);
-                                    const selectedAuthor = authorsList.find(a => a.id === authorId);
-                                    if (selectedAuthor) {
-                                        setNewMovie({
-                                            ...newMovie,
-                                            authorId: authorId,
+                                    const authorId = e.target.value;
+                                    if (authorId) {
+                                        // Tìm author trong danh sách
+                                        const selectedAuthorObj = authorList.find(a => a.id.toString() === authorId);
+                                        if (selectedAuthorObj) {
+                                            // Cập nhật author trong newMovie
+                                            setNewMovie(prev => ({
+                                                ...prev,
+                                                author: selectedAuthorObj
+                                            }));
+                                        }
+                                        setSelectedAuthor(authorId);
+                                    } else {
+                                        // Reset author khi không chọn
+                                        setNewMovie(prev => ({
+                                            ...prev,
                                             author: {
-                                                ...newMovie.author,
-                                                fullName: selectedAuthor.fullName
+                                                fullName: '',
+                                                birthday: '',
+                                                gender: '',
+                                                country: '',
+                                                describe: '',
+                                                avatar: null
                                             }
-                                        });
+                                        }));
+                                        setSelectedAuthor("");
                                     }
                                 }}
-                                options={authorsList}
-                                placeholder="-- Chọn tác giả --"
+                                options={authorList}
+                                loading={loadingAuthor}
+                                placeholder="Chọn tác giả"
                             />
+
+                            {/* Hiển thị thông tin tác giả đã chọn */}
+                            {newMovie.author.fullName && (
+                                <div className="mt-2 p-3 bg-gray-50 rounded">
+                                    <p className="text-sm"><strong>Tác giả đã chọn:</strong> {newMovie.author.fullName}</p>
+                                    <p className="text-sm"><strong>Quốc gia:</strong> {newMovie.author.country || 'N/A'}</p>
+                                </div>
+                            )}
                         </FormSection>
                     </div>
 

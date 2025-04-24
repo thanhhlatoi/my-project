@@ -37,7 +37,7 @@ const AuthorsPage = () => {
         try {
             // Nếu có từ khóa tìm kiếm, truyền vào API
             const response = await authorService.getAll(page, 10, 'id', 'asc');
-            setAuthors(response.data.content);
+            setAuthors(response?.data?.data?.content || []);
             setTotalPages(response.data.totalPages);
         } catch (error) {
             console.error("Lỗi khi lấy danh sách phim:", error);

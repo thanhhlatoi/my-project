@@ -10,29 +10,23 @@ const handleError = (error) => {
     // Bạn có thể tùy chỉnh thêm việc xử lý lỗi ở đây
     throw error;  // Thêm `throw` để các hàm gọi API có thể bắt lỗi nếu cần
 };
-const request = async (method, url, data = null, params = null) => {
-    const token = getAuthToken();  // Lấy token từ nơi lưu trữ
 
-    try {
-        const response = await axios({
-            method,
-            url: `${API_URL}${url}`,
-            data,
-            params,
-            headers: {
-                Authorization: `Bearer ${token}`  // Thêm token vào header
-            }
-        });
-        return response.data; // Trả về dữ liệu response
-    } catch (error) {
-        console.error("Lỗi khi gọi API:", error);
-        throw error; // Ném lỗi để caller có thể xử lý
-    }
-};
 
 // Hàm gọi API lấy danh sách phim
 const getAll = (page = 0, limit = 10, sortBy = 'id', order = 'asc') => {
-    return request('get', '', null, { page, limit, sortBy, order });
+    const token = getAuthToken();  // Lấy token từ nơi lưu trữ
+
+    return axios.get(API_URL, {
+        params: {
+            page,
+            limit,
+            sortBy,
+            order
+        },
+        headers: {
+            Authorization: `Bearer ${token}`  // Thêm token vào header
+        }
+    });
 };
 
 const add = async (author) => {

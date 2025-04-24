@@ -18,22 +18,17 @@ const handleError = (error) => {
 const getAll = async (page = 0, limit = 10, sortBy = 'id', order = 'asc') => {
     const token = getAuthToken();  // Lấy token từ nơi lưu trữ
 
-    try {
-        const response = await axios.get(API_URL, {
-            params: {
-                page,
-                limit,
-                sortBy,
-                order,
-            },
-            headers: {
-                Authorization: `Bearer ${token}`,  // Thêm token vào header
-            },
-        });
-        return response.data;  // Trả về dữ liệu
-    } catch (error) {
-        handleError(error);  // Xử lý lỗi chung
-    }
+    return axios.get(API_URL, {
+        params: {
+            page,
+            limit,
+            sortBy,
+            order
+        },
+        headers: {
+            Authorization: `Bearer ${token}`  // Thêm token vào header
+        }
+    });
 };
 
 const add = async (performer) => {
