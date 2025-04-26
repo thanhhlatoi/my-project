@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import GenreService from '../api/GenreService.js';
 import Layout from '../layouts/layout.jsx';
+import { PlusCircle, Edit2, Trash2, Save, X, Search, RefreshCw } from 'lucide-react';
 
 const Genre = () => {
   const [genres, setGenres] = useState([]);
@@ -9,6 +10,9 @@ const Genre = () => {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   useEffect(() => {
     fetchGenres();
@@ -16,6 +20,7 @@ const Genre = () => {
 
   // Lấy danh sách thể loại
   const fetchGenres = async () => {
+    setLoading(true);
     try {
       const response = await GenreService.getAll(page, 10, 'id', 'asc');
       const data = response.data.data;
@@ -23,6 +28,8 @@ const Genre = () => {
       setTotalPages(data.totalPages);
     } catch (error) {
       console.error('Lỗi khi lấy danh sách genre:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -30,6 +37,7 @@ const Genre = () => {
   const handleAddGenre = async () => {
     if (newGenre.name.trim() === '') return;
 
+    setLoading(true);
     try {
       await GenreService.add(newGenre);
       setNewGenre({ name: '' });
@@ -37,6 +45,8 @@ const Genre = () => {
       setIsModalOpen(false);
     } catch (err) {
       console.error('Lỗi khi thêm genre:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -44,10 +54,11 @@ const Genre = () => {
   const handleUpdate = async () => {
     if (!editGenre.name.trim()) return;
 
+    setLoading(true);
     try {
-      console.log('Đang cập nhật với dữ liệu:', editGenre); // Thêm log này
+      console.log('Đang cập nhật với dữ liệu:', editGenre);
       const response = await GenreService.update(editGenre);
-      console.log('Kết quả response:', response); // Thêm log này
+      console.log('Kết quả response:', response);
 
       if (response.status === 200) {
         console.log('Cập nhật thành công:', response.data);
@@ -58,18 +69,22 @@ const Genre = () => {
       }
     } catch (err) {
       console.error('Lỗi khi cập nhật thể loại:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   // Xóa thể loại
   const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa?')) {
-      try {
-        await GenreService.delete(id);
-        fetchGenres();
-      } catch (err) {
-        console.error('Lỗi khi xóa genre:', err);
-      }
+    setLoading(true);
+    try {
+      await GenreService.delete(id);
+      fetchGenres();
+      setConfirmDelete(null);
+    } catch (err) {
+      console.error('Lỗi khi xóa genre:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -78,147 +93,273 @@ const Genre = () => {
     setEditGenre({ ...genre });
   };
 
+  // Lọc thể loại theo từ khóa tìm kiếm
+  const filteredGenres = genres.filter(genre =>
+      genre.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <Layout>
-      <h2 className="text-2xl font-bold mb-4">Quản lý Thể Loại Phim</h2>
+      <Layout>
+        <div className="max-w-6xl mx-auto py-8 px-4">
+          <div className="bg-white rounded-xl shadow-md p-6">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">Quản lý Thể Loại Phim</h2>
+                <p className="text-gray-500 mt-1">Thêm, chỉnh sửa và xóa các thể loại phim</p>
+              </div>
 
-      {/* Nút thêm thể loại, mở Modal */}
-      <button
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        onClick={() => setIsModalOpen(true)}
-      >
-        Thêm Thể Loại
-      </button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative">
+                  <input
+                      type="text"
+                      placeholder="Tìm kiếm thể loại..."
+                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search size={18} className="text-gray-400" />
+                  </div>
+                </div>
 
-      {/* Modal Thêm Thể Loại */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <h3 className="text-xl font-semibold mb-4">Thêm Thể Loại Mới</h3>
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Tên thể loại"
-                className="border p-2 rounded w-full"
-                value={newGenre.name}
-                onChange={(e) => setNewGenre({ ...newGenre, name: e.target.value })}
-              />
+                <button
+                    className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 shadow-sm"
+                    onClick={() => setIsModalOpen(true)}
+                >
+                  <PlusCircle size={18} />
+                  <span>Thêm Thể Loại</span>
+                </button>
+              </div>
             </div>
 
-            <div className="flex gap-2 justify-end">
-              <button
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                onClick={handleAddGenre}
-              >
-                Thêm
-              </button>
-              <button
-                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-                onClick={() => setIsModalOpen(false)} // Đóng Modal
-              >
-                Hủy
-              </button>
+            {/* Loading indicator */}
+            {loading && (
+                <div className="flex justify-center my-8">
+                  <div className="flex items-center gap-2">
+                    <RefreshCw size={24} className="animate-spin text-blue-600" />
+                    <span className="text-gray-600 font-medium">Đang tải dữ liệu...</span>
+                  </div>
+                </div>
+            )}
+
+            {/* Card View */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              {filteredGenres.map((genre) => (
+                  <div
+                      key={genre.id}
+                      className={`bg-gray-50 rounded-lg border p-4 transition-all duration-300 ${
+                          editGenre?.id === genre.id ? 'ring-2 ring-blue-400 shadow-md' : 'hover:shadow-md'
+                      }`}
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <span className="text-xs font-medium text-gray-500">ID: {genre.id}</span>
+
+                        {editGenre?.id === genre.id ? (
+                            <input
+                                value={editGenre.name}
+                                onChange={(e) => setEditGenre({ ...editGenre, name: e.target.value })}
+                                className="block w-full mt-1 border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Tên thể loại"
+                            />
+                        ) : (
+                            <h3 className="text-lg font-semibold text-gray-800 mt-1">{genre.name}</h3>
+                        )}
+                      </div>
+
+                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          genre.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {genre.active ? 'Hoạt động' : 'Không hoạt động'}
+                      </div>
+                    </div>
+
+                    {editGenre?.id === genre.id && (
+                        <div className="mb-3">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái:</label>
+                          <select
+                              value={editGenre.active}
+                              onChange={(e) => setEditGenre({ ...editGenre, active: e.target.value === 'true' })}
+                              className="w-full border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="true">Hoạt động</option>
+                            <option value="false">Không hoạt động</option>
+                          </select>
+                        </div>
+                    )}
+
+                    <div className="flex justify-end gap-2 mt-4">
+                      {editGenre?.id === genre.id ? (
+                          <>
+                            <button
+                                onClick={handleUpdate}
+                                className="flex items-center gap-1 bg-green-500 text-white px-3 py-1.5 rounded-md hover:bg-green-600 transition duration-300"
+                            >
+                              <Save size={16} />
+                              <span>Lưu</span>
+                            </button>
+                            <button
+                                onClick={() => setEditGenre(null)}
+                                className="flex items-center gap-1 bg-gray-400 text-white px-3 py-1.5 rounded-md hover:bg-gray-500 transition duration-300"
+                            >
+                              <X size={16} />
+                              <span>Hủy</span>
+                            </button>
+                          </>
+                      ) : (
+                          <>
+                            <button
+                                onClick={() => handleEdit(genre)}
+                                className="flex items-center gap-1 bg-amber-500 text-white px-3 py-1.5 rounded-md hover:bg-amber-600 transition duration-300"
+                            >
+                              <Edit2 size={16} />
+                              <span>Sửa</span>
+                            </button>
+                            <button
+                                onClick={() => setConfirmDelete(genre)}
+                                className="flex items-center gap-1 bg-red-500 text-white px-3 py-1.5 rounded-md hover:bg-red-600 transition duration-300"
+                            >
+                              <Trash2 size={16} />
+                              <span>Xóa</span>
+                            </button>
+                          </>
+                      )}
+                    </div>
+                  </div>
+              ))}
             </div>
+
+            {/* Empty state */}
+            {filteredGenres.length === 0 && !loading && (
+                <div className="text-center py-12 bg-gray-50 rounded-lg">
+                  <div className="mx-auto w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                    <Search size={24} className="text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Không tìm thấy thể loại nào</h3>
+                  <p className="text-gray-500 max-w-md mx-auto mb-6">
+                    Không có thể loại nào phù hợp với tìm kiếm của bạn hoặc chưa có thể loại nào được tạo.
+                  </p>
+                  <button
+                      onClick={() => {setSearchTerm(""); fetchGenres();}}
+                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                  >
+                    Xóa bộ lọc
+                  </button>
+                </div>
+            )}
+
+            {/* Phân trang */}
+            {filteredGenres.length > 0 && (
+                <div className="flex justify-center items-center mt-6 gap-2">
+                  <button
+                      onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+                      disabled={page === 0}
+                      className="flex items-center justify-center w-10 h-10 rounded-md border bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    <span>&laquo;</span>
+                  </button>
+
+                  <div className="flex items-center justify-center">
+                <span className="px-4 py-2 rounded-md bg-blue-50 text-blue-700 font-medium">
+                  {page + 1}
+                </span>
+                    <span className="mx-2 text-gray-500">của</span>
+                    <span className="text-gray-700 font-medium">{totalPages}</span>
+                  </div>
+
+                  <button
+                      onClick={() => setPage((prev) => Math.min(prev + 1, totalPages - 1))}
+                      disabled={page + 1 >= totalPages}
+                      className="flex items-center justify-center w-10 h-10 rounded-md border bg-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    <span>&raquo;</span>
+                  </button>
+                </div>
+            )}
           </div>
         </div>
-      )}
 
-      {/* Bảng danh sách thể loại */}
-      <table className="w-full table-auto border-collapse mt-6">
-        <thead>
-          <tr className="bg-gray-100 text-left">
-            <th className="border px-4 py-2">ID</th>
-            <th className="border px-4 py-2">Tên</th>
-            <th className="border px-4 py-2">Trạng thái</th>
-            <th className="border px-4 py-2">Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          {genres.map((genre) => (
-            <tr key={genre.id}>
-              <td className="border px-4 py-2">{genre.id}</td>
-              <td className="border px-4 py-2">
-                {editGenre?.id === genre.id ? (
-                  <input
-                    value={editGenre.name}
-                    onChange={(e) => setEditGenre({ ...editGenre, name: e.target.value })}
-                    className="border p-1 rounded"
-                  />
-                ) : (
-                  genre.name
-                )}
-              </td>
-              <td className="border px-4 py-2">
-                {editGenre?.id === genre.id ? (
-                  <select
-                    value={editGenre.active}
-                    onChange={(e) => setEditGenre({ ...editGenre, active: e.target.value === 'true' })}
-                    className="border p-1 rounded"
+        {/* Modal Thêm Thể Loại */}
+        {isModalOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+              <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 transform transition-all">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-bold text-gray-800">Thêm Thể Loại Mới</h3>
+                  <button
+                      onClick={() => setIsModalOpen(false)}
+                      className="text-gray-400 hover:text-gray-600"
                   >
-                    <option value="true">Hoạt động</option>
-                    <option value="false">Không hoạt động</option>
-                  </select>
-                ) : genre.active ? 'Hoạt động' : 'Không hoạt động'}
-              </td>
-              <td className="border px-4 py-2 flex gap-2">
-                {editGenre?.id === genre.id ? (
-                  <>
-                    <button
-                      onClick={handleUpdate}
-                      className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
-                    >
-                      Lưu
-                    </button>
-                    <button
-                      onClick={() => setEditGenre(null)}
-                      className="bg-gray-400 text-white px-2 py-1 rounded hover:bg-gray-500"
-                    >
-                      Hủy
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => handleEdit(genre)}
-                      className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600"
-                    >
-                      Sửa
-                    </button>
-                    <button
-                      onClick={() => handleDelete(genre.id)}
-                      className="bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
-                    >
-                      Xóa
-                    </button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                    <X size={20} />
+                  </button>
+                </div>
 
-      {/* Phân trang */}
-      <div className="flex justify-center mt-4 gap-2">
-        <button
-          onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
-          disabled={page === 0}
-          className="bg-gray-300 px-3 py-1 rounded disabled:opacity-50"
-        >
-          Trước
-        </button>
-        <span className="px-3 py-1">
-          {page + 1} / {totalPages}
-        </span>
-        <button
-          onClick={() => setPage((prev) => Math.min(prev + 1, totalPages - 1))}
-          disabled={page + 1 >= totalPages}
-          className="bg-gray-300 px-3 py-1 rounded disabled:opacity-50"
-        >
-          Sau
-        </button>
-      </div>
-    </Layout>
+                <div className="mb-6">
+                  <label htmlFor="genreName" className="block text-sm font-medium text-gray-700 mb-1">
+                    Tên thể loại
+                  </label>
+                  <input
+                      id="genreName"
+                      type="text"
+                      placeholder="Nhập tên thể loại"
+                      className="border border-gray-300 p-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={newGenre.name}
+                      onChange={(e) => setNewGenre({ ...newGenre, name: e.target.value })}
+                  />
+                </div>
+
+                <div className="flex gap-3 justify-end">
+                  <button
+                      onClick={() => setIsModalOpen(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-300"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                      onClick={handleAddGenre}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-300 flex items-center gap-2"
+                      disabled={newGenre.name.trim() === ''}
+                  >
+                    <PlusCircle size={18} />
+                    <span>Thêm thể loại</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+        )}
+
+        {/* Modal Xác nhận xóa */}
+        {confirmDelete && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+              <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 transform transition-all">
+                <div className="text-center mb-4">
+                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <Trash2 size={24} className="text-red-600" />
+                  </div>
+                  <h3 className="text-xl font-medium text-gray-900 mb-2">Xác nhận xóa thể loại</h3>
+                  <p className="text-gray-500">
+                    Bạn có chắc chắn muốn xóa thể loại "{confirmDelete.name}"? Hành động này không thể hoàn tác.
+                  </p>
+                </div>
+
+                <div className="flex gap-3 justify-center mt-6">
+                  <button
+                      onClick={() => setConfirmDelete(null)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-300"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                      onClick={() => handleDelete(confirmDelete.id)}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-300"
+                  >
+                    Xác nhận xóa
+                  </button>
+                </div>
+              </div>
+            </div>
+        )}
+      </Layout>
   );
 };
 

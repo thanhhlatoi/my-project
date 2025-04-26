@@ -1,46 +1,52 @@
 // Import các component
 import React, { useState, useEffect } from 'react';
 import Layout from '../layouts/layout.jsx';
-import authorService from '../api/AuthorService.js';
-import CreateAuthor from '../components/Create/CreateAuthor.jsx';
-import AuthorDetails from '../components/Update/AuthorDetails.jsx';
+import userService from '../api/UserService.js';
+import CreateUser from '../components/Create/CreateUser.jsx';
+import UserDetails from '../components/Update/UserDetails.jsx';
 import Pagination from '../components/Pagination';
 import { BASE_URL } from "../api/config.js";
 
 const UserPage = () => {
     // States
-    const [authors, setAuthors] = useState([]);
-    //phan trang
+    const [users, setUsers] = useState([]);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
-    const [ loading,setLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredUsers, setFilteredUsers] = useState([]);
 
     // Modal states
     const [isOpen, setIsOpen] = useState(false);
-    const [selectedAuthor, setSelectedAuthor] = useState(null);
+    const [selectedUser, setSelectedUser] = useState(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [newAuthor, setNewAuthor] = useState({
+    const [newUser, setNewUser] = useState({
+        email: '',
         fullName: '',
-        avatar: '',
-        birthday: '',
-        country: '',
-        gender: '',
-        description: ''
+        firstName: '',
+        lastName: '',
+        phoneNumber: '',
+        dateOfBirth: '',
+        address: '',
+        gender: false,
+        profilePictureUrl: ''
     });
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-    const [authorToDelete, setAuthorToDelete] = useState(null);
+    const [userToDelete, setUserToDelete] = useState(null);
 
-    // Hàm fetch dữ liệu - đơn giản hóa giống FlimPage
+    // Hàm fetch dữ liệu
     const fetchData = async () => {
         setLoading(true);
         try {
-            // Nếu có từ khóa tìm kiếm, truyền vào API
-            const response = await authorService.getAll(page, 10, 'id', 'asc');
-            setAuthors(response.data.content);
-            setTotalPages(response.data.totalPages);
+            const response = await userService.getAll(page, 10, 'id', 'asc');
+            if (response && response.data && response.data.data) {
+                setUsers(response.data.data);
+                setFilteredUsers(response.data.data);
+                setTotalPages(1);
+            }
         } catch (error) {
-            console.error("Lỗi khi lấy danh sách phim:", error);
+            console.error("Lỗi khi lấy danh sách người dùng:", error);
         } finally {
             setLoading(false);
         }
@@ -50,49 +56,66 @@ const UserPage = () => {
     useEffect(() => {
         fetchData();
     }, [page]);
+
+    // Lọc người dùng khi searchTerm thay đổi
+    useEffect(() => {
+        if (!searchTerm.trim()) {
+            setFilteredUsers(users);
+            return;
+        }
+
+        const lowercasedSearch = searchTerm.toLowerCase();
+        const filtered = users.filter(user =>
+            user.fullName?.toLowerCase().includes(lowercasedSearch) ||
+            user.email?.toLowerCase().includes(lowercasedSearch) ||
+            (user.roles && user.roles.some(role =>
+                role.name.toLowerCase().includes(lowercasedSearch)
+            ))
+        );
+        setFilteredUsers(filtered);
+    }, [searchTerm, users]);
+
     const formatDate = (dateStr) => {
-        if (!dateStr) return 'Unknown';
+        if (!dateStr) return 'Not provided';
         const date = new Date(dateStr);
-        return date.toLocaleDateString('en-GB'); // hoặc 'vi-VN' nếu bạn muốn định dạng tiếng Việt
+        return date.toLocaleDateString('en-GB');
     };
 
-
     // Dialog handlers
-    const openDialog = (author) => {
-        setSelectedAuthor(author);
+    const openDialog = (user) => {
+        setSelectedUser(user);
         setIsOpen(true);
     };
 
     const closeDialog = () => {
         setIsOpen(false);
-        setSelectedAuthor(null);
+        setSelectedUser(null);
     };
 
     // Modal handlers
     const openAddModal = () => {
         setIsEditing(false);
-        setNewAuthor({
+        setNewUser({
+            email: '',
             fullName: '',
-            avatar: '',
-            birthday: '',
-            country: '',
-            gender: true,
-            describe: ''
+            firstName: '',
+            lastName: '',
+            phoneNumber: '',
+            dateOfBirth: '',
+            address: '',
+            gender: false,
+            profilePictureUrl: ''
         });
         setIsAddModalOpen(true);
     };
 
-    const openEditModal = (author) => {
-        // Clone và format author object for editing
-        const editableAuthor = { ...author };
-
-        // Format the birthday if it exists
-        if (editableAuthor.birthday) {
-            const date = new Date(editableAuthor.birthday);
-            editableAuthor.birthday = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    const openEditModal = (user) => {
+        const editableUser = { ...user };
+        if (editableUser.dateOfBirth) {
+            const date = new Date(editableUser.dateOfBirth);
+            editableUser.dateOfBirth = date.toISOString().split('T')[0];
         }
-
-        setNewAuthor(editableAuthor);
+        setNewUser(editableUser);
         setIsEditing(true);
         setIsAddModalOpen(true);
     };
@@ -101,187 +124,279 @@ const UserPage = () => {
         setIsAddModalOpen(false);
     };
 
-    // Handle form submission for adding or updating author
+    // Handle form submission for adding or updating user
     const handleSubmit = async () => {
         try {
-            // Format the birthday in ISO format if it's provided
-            const formattedAuthor = {
-                ...newAuthor,
-                birthday: newAuthor.birthday ? new Date(newAuthor.birthday).toISOString() : null
+            const formattedUser = {
+                ...newUser,
+                dateOfBirth: newUser.dateOfBirth ? new Date(newUser.dateOfBirth).toISOString() : null
             };
 
             if (isEditing) {
-                await authorService.update(formattedAuthor);
+                await userService.update(formattedUser);
             } else {
-                await authorService.add(formattedAuthor);
+                await userService.add(formattedUser);
             }
 
             closeAddModal();
-            fetchData(); // Gọi lại API để cập nhật dữ liệu
+            fetchData();
         } catch (err) {
-            console.error("Error saving author:", err);
-            alert("Failed to save author. Please try again.");
+            console.error("Error saving user:", err);
+            alert("Failed to save user. Please try again.");
         }
     };
 
     // Confirmation dialog for delete
-    const confirmDelete = (author) => {
-        setAuthorToDelete(author);
+    const confirmDelete = (user) => {
+        setUserToDelete(user);
         setDeleteConfirmOpen(true);
     };
 
-    // Handle author deletion
+    // Handle user deletion
     const handleDelete = async () => {
-        if (!authorToDelete) return;
+        if (!userToDelete) return;
 
         try {
-            await authorService.delete(authorToDelete.id);
-
-            // Close dialogs
+            await userService.delete(userToDelete.id);
             setDeleteConfirmOpen(false);
-            if (isOpen && selectedAuthor && selectedAuthor.id === authorToDelete.id) {
+            if (isOpen && selectedUser && selectedUser.id === userToDelete.id) {
                 closeDialog();
             }
-
-            fetchData(); // Gọi lại API để cập nhật dữ liệu
+            fetchData();
         } catch (err) {
-            console.error("Error deleting author:", err);
-            alert("Failed to delete author. Please try again.");
+            console.error("Error deleting user:", err);
+            alert("Failed to delete user. Please try again.");
+        }
+    };
+
+    // Hiển thị vai trò người dùng
+    const displayRoles = (roles) => {
+        if (!roles || roles.length === 0) return 'No roles';
+        return roles.map(role => role.name).join(', ');
+    };
+
+    // Hiển thị badge dựa trên vai trò
+    const getRoleBadgeClass = (roles) => {
+        if (!roles || roles.length === 0) return "bg-gray-100 text-gray-800";
+
+        const roleNames = roles.map(role => role.name.toUpperCase());
+
+        if (roleNames.includes("ADMIN")) {
+            return "bg-red-100 text-red-800";
+        } else if (roleNames.includes("USERS")) {
+            return "bg-blue-100 text-blue-800";
+        } else {
+            return "bg-green-100 text-green-800";
         }
     };
 
     return (
         <Layout>
-            <div className="max-w-6xl mx-auto py-10 px-4">
-                <h1 className="text-3xl font-bold text-blue-700 mb-6">User List</h1>
+            <div className="max-w-6xl mx-auto py-8 px-4">
+                {/* Header và Search */}
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
+                    <div>
+                        <h1 className="text-2xl md:text-3xl font-bold text-gray-800">User Management</h1>
+                        <p className="text-gray-500 text-sm md:text-base mt-1">Manage users and their access</p>
+                    </div>
 
-                {/* Search and display options */}
-                <div className="flex flex-wrap justify-between mb-6 gap-4">
-                    <div className="relative w-full max-w-md">
+                    <div className="flex flex-col sm:flex-row gap-3 items-center">
+                        <div className="relative w-full sm:w-64">
+                            <input
+                                type="text"
+                                placeholder="Search users..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
 
-                        <div className="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
-                            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        <button
+                            onClick={openAddModal}
+                            className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm w-full sm:w-auto"
+                        >
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
                             </svg>
+                            Add User
+                        </button>
+                    </div>
+                </div>
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                        <div className="flex items-center">
+                            <div className="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p className="text-gray-500 text-sm font-medium">Total Users</p>
+                                <p className="text-2xl font-bold text-gray-800">{users.length}</p>
+                            </div>
                         </div>
                     </div>
 
+                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                        <div className="flex items-center">
+                            <div className="p-3 rounded-full bg-red-100 text-red-600 mr-4">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p className="text-gray-500 text-sm font-medium">Admin Users</p>
+                                <p className="text-2xl font-bold text-gray-800">
+                                    {users.filter(user => user.roles && user.roles.some(role => role.name.toUpperCase() === "ADMIN")).length}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                        <div className="flex items-center">
+                            <div className="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p className="text-gray-500 text-sm font-medium">Standard Users</p>
+                                <p className="text-2xl font-bold text-gray-800">
+                                    {users.filter(user => user.roles && user.roles.some(role => role.name.toUpperCase() === "USERS")).length}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Add author button */}
-                <button
-                    onClick={openAddModal}
-                    className="mb-6 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition flex items-center"
-                >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Add Author
-                </button>
                 {/* Loading indicator */}
                 {loading ? (
-                    <div className="flex justify-center my-8">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-700"></div>
+                    <div className="flex justify-center py-12">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                     </div>
                 ) : (
                     <>
-                        {/* Authors grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {authors.map((author) => (
-                                <div
-                                    key={author.id || author.fullName}
-                                    className="bg-white rounded-xl shadow-md hover:shadow-lg transition duration-300 p-4 flex flex-col items-center"
-                                >
-                                    <div
-                                        className="cursor-pointer w-full flex flex-col items-center"
-                                        onClick={() => openDialog(author)}
-                                    >
-                                        {/* Phần hiển thị hình ảnh - đơn giản giống FlimPage */}
-                                        <div className="w-24 h-24 mb-4 overflow-hidden">
-                                            <img
-                                                loading="lazy"
-                                                src={author.avatar ? `${BASE_URL}/api/videos/view?bucketName=thanh&path=${author.avatar}` : '/api/placeholder/120/120'}
-                                                alt={author.fullName}
-                                                className="w-24 h-24 rounded-full border object-cover"
-                                            />
-                                        </div>
-                                        <h2 className="text-lg font-semibold text-gray-800 text-center">{author.fullName}</h2>
-                                        <p className="text-sm text-gray-600 text-center">{author.country || 'Unknown'}</p>
-                                        <p className="text-xs text-gray-500 text-center">Born: {formatDate(author.birthday)}</p>
-                                        <p className="text-xs text-gray-500 text-center">Gender: {author.gender ? 'Male' : 'Female'}</p>
-                                    </div>
-
-                                    {/* Action buttons */}
-                                    <div className="mt-4 flex space-x-2 w-full justify-center">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                openEditModal(author);
-                                            }}
-                                            className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 flex items-center"
-                                        >
-                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-                                            </svg>
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                confirmDelete(author);
-                                            }}
-                                            className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 flex items-center"
-                                        >
-                                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                            </svg>
-                                            Delete
-                                        </button>
-                                    </div>
+                        {filteredUsers.length > 0 ? (
+                            <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
+                                {/* Table Header */}
+                                <div className="hidden md:grid md:grid-cols-5 text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 border-b border-gray-200">
+                                    <div className="px-6 py-3 col-span-2">User</div>
+                                    <div className="px-6 py-3">Role</div>
+                                    <div className="px-6 py-3">Gender</div>
+                                    <div className="px-6 py-3 text-right">Actions</div>
                                 </div>
-                            ))}
-                        </div>
 
-                        {/* No results message */}
-                        {authors.length === 0 && (
-                            <div className="text-center py-12 bg-gray-50 rounded-lg">
-                                <p className="text-gray-500 mt-4">No authors found matching your search.</p>
-                                {/*{searchTerm && (*/}
-                                {/*    <button*/}
-                                {/*        onClick={() => setSearchTerm('')}*/}
-                                {/*        className="mt-2 text-blue-600 hover:underline"*/}
-                                {/*    >*/}
-                                {/*        Clear search*/}
-                                {/*    </button>*/}
-                                {/*)}*/}
+                                {/* Mobile Cards / Desktop Table Rows */}
+                                <div className="divide-y divide-gray-200">
+                                    {filteredUsers.map(user => (
+                                        <div key={user.id} className="block md:grid md:grid-cols-5 md:items-center hover:bg-gray-50 transition-colors">
+                                            {/* User info - Mobile and Desktop */}
+                                            <div className="px-6 py-4 col-span-2 flex items-center" onClick={() => openDialog(user)} role="button" tabIndex="0">
+                                                <div className="flex-shrink-0 h-10 w-10">
+                                                    <img
+                                                        className="h-10 w-10 rounded-full object-cover"
+                                                        src={user.profilePictureUrl ? `${BASE_URL}/api/videos/view?bucketName=thanh&path=${user.profilePictureUrl}` : '/api/placeholder/40/40'}
+                                                        alt={user.fullName}
+                                                    />
+                                                </div>
+                                                <div className="ml-4">
+                                                    <div className="text-sm font-medium text-gray-900">{user.fullName}</div>
+                                                    <div className="text-sm text-gray-500">{user.email}</div>
+                                                </div>
+                                            </div>
+
+                                            {/* Role - Mobile and Desktop */}
+                                            <div className="px-6 py-4 md:py-0">
+                                                <span className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${getRoleBadgeClass(user.roles)}`}>
+                                                    {displayRoles(user.roles)}
+                                                </span>
+                                            </div>
+
+                                            {/* Gender - Mobile and Desktop */}
+                                            <div className="px-6 py-4 md:py-0 text-sm text-gray-500">
+                                                {user.gender ? 'Male' : 'Female'}
+                                            </div>
+
+                                            {/* Actions - Mobile and Desktop */}
+                                            <div className="px-6 py-4 md:py-0 text-right">
+                                                <div className="flex justify-end space-x-2">
+                                                    <button
+                                                        onClick={() => openEditModal(user)}
+                                                        className="text-blue-600 hover:text-blue-800"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => confirmDelete(user)}
+                                                        className="text-red-600 hover:text-red-800"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
+                                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
+                                <p className="mt-1 text-sm text-gray-500">
+                                    {searchTerm ? `No results match "${searchTerm}"` : 'Get started by adding a new user'}
+                                </p>
+                                {searchTerm && (
+                                    <div className="mt-3">
+                                        <button
+                                            onClick={() => setSearchTerm('')}
+                                            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                        >
+                                            Clear search
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </>
                 )}
 
                 {/* Pagination */}
-                <Pagination
-                    currentPage={page}
-                    totalPages={totalPages}
-                    onPageChange={(newPage) => setPage(newPage)}
-                />
+                <div className="mt-6">
+                    <Pagination
+                        currentPage={page}
+                        totalPages={totalPages}
+                        onPageChange={(newPage) => setPage(newPage)}
+                    />
+                </div>
 
-                {/* Sử dụng component CreateAuthor */}
-                <CreateAuthor
+                {/* Modals */}
+                <CreateUser
                     isOpen={isAddModalOpen}
                     closeModal={closeAddModal}
-                    newAuthor={newAuthor}
-                    setNewAuthor={setNewAuthor}
+                    newUser={newUser}
+                    setNewUser={setNewUser}
                     handleSubmit={handleSubmit}
                     isEditing={isEditing}
                 />
 
-                {/* Sử dụng component AuthorDetails */}
-                <AuthorDetails
+                <UserDetails
                     isOpen={isOpen}
                     closeDialog={closeDialog}
-                    selectedAuthor={selectedAuthor}
+                    selectedUser={selectedUser}
                     formatDate={formatDate}
                     openEditModal={openEditModal}
                     onDelete={confirmDelete}
@@ -297,20 +412,30 @@ const UserPage = () => {
                                 </h2>
                             </div>
                             <div className="p-6">
-                                <p className="text-gray-600">
-                                    Are you sure you want to delete {authorToDelete?.fullName}? This action cannot be undone.
-                                </p>
+                                <div className="flex items-center mb-4">
+                                    <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                        <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                        </svg>
+                                    </div>
+                                    <div className="ml-4">
+                                        <h3 className="text-lg font-medium text-gray-900">Delete user</h3>
+                                        <p className="text-gray-500 mt-1">
+                                            Are you sure you want to delete {userToDelete?.fullName}? This action cannot be undone.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                             <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3 border-t">
                                 <button
                                     onClick={() => setDeleteConfirmOpen(false)}
-                                    className="px-4 py-2 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none"
+                                    className="px-4 py-2 rounded bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleDelete}
-                                    className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 focus:outline-none"
+                                    className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                                 >
                                     Delete
                                 </button>

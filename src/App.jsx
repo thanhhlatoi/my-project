@@ -11,6 +11,8 @@ import './App.css'
 import FilmDetail from "./components/FilmDetail.jsx";
 import FilmWatch from "./components/FilmWatch.jsx";
 import User from "./pages/UserPage";
+import Category from "./pages/CategoryPage";
+import VideoFilm from "./pages/VideoFilmPage";
 function App() {
     // Kiểm tra xem có đang ở trang login hay không
     const location = useLocation();
@@ -32,6 +34,8 @@ function App() {
                     <Route path="/author" element={<Author />} />
                     <Route path="/performer" element={<Performer />} />
                     <Route path="/user" element={<User />} />
+                    <Route path="/category" element={<Category />} />
+                    <Route path="/videoFilm" element={<VideoFilm />} />
                 </Routes>
             </main>
         </div>

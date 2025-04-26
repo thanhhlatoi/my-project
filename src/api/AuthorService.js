@@ -28,6 +28,32 @@ const getAll = (page = 0, limit = 10, sortBy = 'id', order = 'asc') => {
         }
     });
 };
+const getById = (id) => {
+    if (!id) {
+        return Promise.reject(new Error('ID không hợp lệ'));
+    }
+
+    const token = getAuthToken();  // Lấy token từ nơi lưu trữ
+
+    return axios.get(`${API_URL}/${id}`, {
+        headers: {
+            Authorization: `Bearer ${token}`  // Thêm token vào header
+        }
+    })
+        .then(response => {
+            // Kiểm tra và xử lý dữ liệu trả về
+            if (response.data) {
+                return response.data;  // Trả về dữ liệu từ response của Backend
+            } else {
+                throw new Error('Không tìm thấy thông tin tác giả');
+            }
+        })
+        .catch(error => {
+            handleError(error);  // Sử dụng hàm xử lý lỗi chung
+            throw error;
+        });
+};
+
 
 const add = async (author) => {
     const token = getAuthToken();  // Lấy token từ nơi lưu trữ
@@ -77,6 +103,7 @@ const deleteGenre = async (id) => {
 
 export default {
     getAll,
+    getById,
     add,
     update,
     delete: deleteGenre,

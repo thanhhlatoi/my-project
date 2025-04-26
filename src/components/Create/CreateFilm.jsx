@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import GenreService from "../../api/GenreService.js";
 import PerformerService from "../../api/PerformerService.js";
 import AuthorService from "../../api/AuthorService.js";
+import FilmService from "../../api/FilmService.js";
+import CategoryService from "../../api/CategoryService.js";
 
 // Component UI cơ bản
 const InputField = ({ label, ...props }) => (
@@ -209,36 +211,31 @@ const CreateFilm = ({ onClose }) => {
     const [newMovie, setNewMovie] = useState({
         title: '',
         description: '',
-        views: 0,
-        year: null,
-        imgMovie: '',
-        genres: [],
-        author: {
-            fullName: '',
-            birthday: '',
-            gender: '',
-            country: '',
-            describe: '',
-            avatar: null
-        },
+        time: '',
+        year: '',
+        image: null,
+        genre: [],
+        authorId: null,
+        categoryId: null,
         performer: []
     });
-
-
 
     // State cho danh sách dữ liệu từ API
     const [genresList, setGenresList] = useState([]);
     const [performerList, setPerformerList] = useState([]);
     const [authorList, setAuthorList] = useState([]);
+    const [categoryList, setCategoryList] = useState([]);
+
     // State cho giá trị đang chọn
     const [selectedPerformer, setSelectedPerformer] = useState("");
     const [selectedGenre, setSelectedGenre] = useState("");
-    const [selectedAuthor, setSelectedAuthor] = useState("");
+    // const [selectedAuthor, setSelectedAuthor] = useState("");
     // State cho trạng thái loading
     const [loading, setLoading] = useState(false);
     const [loadingGenres, setLoadingGenres] = useState(false);
     const [loadingPerformers, setLoadingPerformers] = useState(false);
     const [loadingAuthor, setLoadingAuthor] = useState(false);
+    const [loadingCategory, setLoadingCategory] = useState(false);
 
     // State cho thông báo lỗi
     const [error, setError] = useState('');
@@ -250,7 +247,7 @@ const CreateFilm = ({ onClose }) => {
             try {
                 const response = await GenreService.getAll(0, 100, 'id', 'asc');
                 const genresArray = response?.data?.data?.content;
-                console.log(response);
+                console.log("Thể loại:", response);
                 if (Array.isArray(genresArray)) {
                     setGenresList(genresArray);
                 } else {
@@ -267,8 +264,8 @@ const CreateFilm = ({ onClose }) => {
             setLoadingPerformers(true);
             try {
                 const response = await PerformerService.getAll(0, 100, 'id', 'asc');
-                const performerArray = response?.data?.data?.content; // <-- response.data chính là content
-                console.log(response);
+                const performerArray = response?.data?.data?.content;
+                console.log("Diễn viên:", response);
 
                 if (Array.isArray(performerArray)) {
                     setPerformerList(performerArray);
@@ -286,9 +283,8 @@ const CreateFilm = ({ onClose }) => {
             setLoadingAuthor(true);
             try {
                 const response = await AuthorService.getAll(0, 100, 'id', 'asc');
-                console.log('Author response:', response);
+                console.log('Tác giả:', response);
 
-                // Kiểm tra cấu trúc response và trích xuất dữ liệu
                 if (response?.data?.data?.content) {
                     setAuthorList(response.data.data.content);
                 } else {
@@ -297,29 +293,38 @@ const CreateFilm = ({ onClose }) => {
             } catch (error) {
                 console.error('Lỗi khi lấy danh sách tác giả:', error);
             } finally {
-                setLoadingAuthor(false); // Sửa lại từ setLoadingPerformers
+                setLoadingAuthor(false);
             }
         };
 
-        // Gọi cả hai API đồng thời
+        const fetchCategory = async () => {
+            setLoadingCategory(true);
+            try {
+                const response = await CategoryService.getAll(0, 100, 'id', 'asc');
+                console.log('Danh mục:', response);
+
+                if (response?.data?.data?.content) {
+                    setCategoryList(response.data.data.content);
+                } else {
+                    setCategoryList([]);
+                }
+            } catch (error) {
+                console.error('Lỗi khi lấy danh sách danh mục:', error);
+            } finally {
+                setLoadingCategory(false);
+            }
+        };
+
+        // Gọi cả ba API đồng thời
         setLoading(true);
-        Promise.all([fetchGenres(), fetchPerformer(),fetchAuthor()])
+        Promise.all([fetchGenres(), fetchPerformer(), fetchAuthor(),fetchCategory()])
             .finally(() => setLoading(false));
     }, []);
 
     // Hàm xử lý sự kiện input thay đổi
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-
-        if (name.startsWith('author.')) {
-            const key = name.split('.')[1];
-            setNewMovie(prev => ({
-                ...prev,
-                author: { ...prev.author, [key]: value }
-            }));
-        } else {
-            setNewMovie(prev => ({ ...prev, [name]: value }));
-        }
+        setNewMovie(prev => ({ ...prev, [name]: value }));
     };
 
     // Xử lý chọn hình ảnh
@@ -328,17 +333,9 @@ const CreateFilm = ({ onClose }) => {
         if (file) {
             setNewMovie(prev => ({
                 ...prev,
-                imgMovie: URL.createObjectURL(file),
-                imageFile: file
+                image: file
             }));
         }
-    };
-
-    // Xử lý thay đổi năm
-    const handleYearChange = (e) => {
-        const dateValue = e.target.value;
-        const yearOnly = dateValue.split('-')[0];
-        setNewMovie(prev => ({ ...prev, year: yearOnly }));
     };
 
     // Hàm thêm thể loại vào danh sách
@@ -347,12 +344,12 @@ const CreateFilm = ({ onClose }) => {
 
         const genreId = parseInt(selectedGenre);
         const genreToAdd = genresList.find(g => g.id === genreId);
-        const alreadyAdded = newMovie.genres.some(g => g.id === genreId);
+        const alreadyAdded = newMovie.genre.includes(genreId);
 
         if (genreToAdd && !alreadyAdded) {
             setNewMovie(prev => ({
                 ...prev,
-                genres: [...prev.genres, genreToAdd]
+                genre: [...prev.genre, genreId]
             }));
             setSelectedGenre("");
         }
@@ -364,22 +361,23 @@ const CreateFilm = ({ onClose }) => {
 
         const performerId = parseInt(selectedPerformer);
         const performerToAdd = performerList.find(p => p.id === performerId);
-        const alreadyAdded = newMovie.performer.some(p => p.id === performerId);
+        const alreadyAdded = newMovie.performer.includes(performerId);
 
         if (performerToAdd && !alreadyAdded) {
             setNewMovie(prev => ({
                 ...prev,
-                performer: [...prev.performer, performerToAdd]
+                performer: [...prev.performer, performerId]
             }));
             setSelectedPerformer("");
         }
+        console.log(newMovie);
     };
 
     // Hàm xóa thể loại khỏi danh sách
     const handleRemoveGenre = (genreId) => {
         setNewMovie(prev => ({
             ...prev,
-            genres: prev.genres.filter(g => g.id !== genreId)
+            genre: prev.genre.filter(id => id !== genreId)
         }));
     };
 
@@ -387,21 +385,63 @@ const CreateFilm = ({ onClose }) => {
     const handleRemovePerformer = (performerId) => {
         setNewMovie(prev => ({
             ...prev,
-            performer: prev.performer.filter(p => p.id !== performerId)
+            performer: prev.performer.filter(id => id !== performerId)
         }));
     };
 
     // Xử lý lưu dữ liệu
-    const handleSave = () => {
-        if (!newMovie.title || !newMovie.description || newMovie.views <= 0 ||
-            newMovie.genres.length === 0 || !newMovie.author.fullName) {
-            setError('Vui lòng điền đầy đủ thông tin bắt buộc.');
-            return;
-        }
+    // Xử lý lưu dữ liệu
+    const handleSave = async () => {
+        try {
+            // Kiểm tra dữ liệu trước khi gửi
+            if (!newMovie.title || !newMovie.description) {
+                setError('Vui lòng điền đầy đủ thông tin');
+                return;
+            }
 
-        console.log('Dữ liệu gửi lên:', newMovie);
-        alert('Chức năng sẽ xử lý sau');
-        onClose();
+            const formData = new FormData();
+            formData.append('title', newMovie.title);
+            formData.append('description', newMovie.description);
+            formData.append('time', newMovie.time);
+            formData.append('year', newMovie.year);
+
+            // Kiểm tra và append image
+            if (newMovie.image) {
+                formData.append('image', newMovie.image);
+            } else {
+                setError('Vui lòng chọn hình ảnh');
+                return;
+            }
+
+            // Append các trường khác
+            newMovie.genre.forEach(genreId => formData.append('genre', genreId));
+
+            if (newMovie.authorId) {
+                formData.append('authorId', newMovie.authorId);
+            }
+
+            if (newMovie.categoryId) {
+                formData.append('categoryId', newMovie.categoryId);
+            }
+
+            newMovie.performer.forEach(performerId => formData.append('performer', performerId));
+
+            // Gọi service để thêm phim
+            const response = await FilmService.add(formData);
+
+            // Xử lý phản hồi
+            if (response) {
+                alert('Thêm phim thành công');
+                onClose(); // Đóng modal sau khi thêm thành công
+
+                // Tải lại trang
+                window.location.reload();
+            }
+        } catch (error) {
+            // Xử lý lỗi chi tiết
+            console.error('Lỗi khi thêm phim:', error);
+            setError(error.message || 'Có lỗi xảy ra khi thêm phim');
+        }
     };
 
     return (
@@ -447,26 +487,20 @@ const CreateFilm = ({ onClose }) => {
                                 placeholder="Nhập tiêu đề phim"
                             />
 
-                            <div className="flex flex-col gap-1">
-                                <label className="block text-sm font-medium text-gray-700">Năm phát hành</label>
-                                <input
-                                    type="date"
-                                    onChange={handleYearChange}
-                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-                                />
-                                {newMovie.year && (
-                                    <p className="text-xs text-gray-600 mt-1">Đã chọn năm: {newMovie.year}</p>
-                                )}
-                            </div>
+                            <InputField
+                                label="Thời lượng"
+                                name="time"
+                                value={newMovie.time}
+                                onChange={handleInputChange}
+                                placeholder="Nhập thời lượng phim (phút)"
+                            />
 
                             <InputField
-                                label="Lượt xem"
-                                name="views"
-                                type="number"
-                                value={newMovie.views}
+                                label="Năm phát hành"
+                                name="year"
+                                value={newMovie.year}
                                 onChange={handleInputChange}
-                                min="0"
-                                placeholder="0"
+                                placeholder="Nhập năm phát hành"
                             />
                         </FormSection>
 
@@ -480,19 +514,6 @@ const CreateFilm = ({ onClose }) => {
                                     onChange={handleImageChange}
                                     className="text-sm p-2 border border-dashed border-gray-300 rounded-lg"
                                 />
-                                {newMovie.imgMovie ? (
-                                    <div className="mt-3">
-                                        <img
-                                            src={newMovie.imgMovie}
-                                            alt="Preview"
-                                            className="w-full h-auto max-h-40 object-cover rounded-lg border shadow-sm"
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="mt-2 bg-gray-100 rounded-lg p-4 flex items-center justify-center h-32 text-gray-400">
-                                        Chưa có ảnh
-                                    </div>
-                                )}
                             </div>
                         </FormSection>
                     </div>
@@ -515,50 +536,72 @@ const CreateFilm = ({ onClose }) => {
                         <FormSection title="Thông tin tác giả" bgColor="bg-yellow-50">
                             <SelectField
                                 label="Tác giả"
-                                value={selectedAuthor}
+                                value={newMovie.authorId || ''} // Sử dụng authorId làm value
                                 onChange={(e) => {
                                     const authorId = e.target.value;
-                                    if (authorId) {
-                                        // Tìm author trong danh sách
-                                        const selectedAuthorObj = authorList.find(a => a.id.toString() === authorId);
+
+                                    // Chuyển đổi sang số nếu cần
+                                    const selectedAuthorId = authorId ? parseInt(authorId) : null;
+
+                                    if (selectedAuthorId) {
+                                        // Tìm object tác giả dựa trên ID
+                                        const selectedAuthorObj = authorList.find(
+                                            author => author.id === selectedAuthorId
+                                        );
+
                                         if (selectedAuthorObj) {
-                                            // Cập nhật author trong newMovie
                                             setNewMovie(prev => ({
                                                 ...prev,
+                                                authorId: selectedAuthorId,
                                                 author: selectedAuthorObj
                                             }));
+                                        } else {
+                                            setNewMovie(prev => ({
+                                                ...prev,
+                                                authorId: null,
+                                                author: null
+                                            }));
                                         }
-                                        setSelectedAuthor(authorId);
                                     } else {
-                                        // Reset author khi không chọn
                                         setNewMovie(prev => ({
                                             ...prev,
-                                            author: {
-                                                fullName: '',
-                                                birthday: '',
-                                                gender: '',
-                                                country: '',
-                                                describe: '',
-                                                avatar: null
-                                            }
+                                            authorId: null,
+                                            author: null
                                         }));
-                                        setSelectedAuthor("");
                                     }
                                 }}
-                                options={authorList}
+                                options={authorList.map(author => ({
+                                    id: author.id,
+                                    name: author.fullName // Hiển thị tên
+                                }))}
                                 loading={loadingAuthor}
                                 placeholder="Chọn tác giả"
                             />
+                        </FormSection>
+                        {/* Thông tin danh mục */}
+                        <FormSection title="Thông tin danh mục" bgColor="bg-blue-50">
+                            <SelectField
+                                label="Danh mục"
+                                value={newMovie.categoryId || ''}
+                                onChange={(e) => {
+                                    const categoryId = e.target.value;
+                                    const selectedCategoryId = categoryId ? parseInt(categoryId) : null;
 
-                            {/* Hiển thị thông tin tác giả đã chọn */}
-                            {newMovie.author.fullName && (
-                                <div className="mt-2 p-3 bg-gray-50 rounded">
-                                    <p className="text-sm"><strong>Tác giả đã chọn:</strong> {newMovie.author.fullName}</p>
-                                    <p className="text-sm"><strong>Quốc gia:</strong> {newMovie.author.country || 'N/A'}</p>
-                                </div>
-                            )}
+                                    setNewMovie(prev => ({
+                                        ...prev,
+                                        categoryId: selectedCategoryId
+                                    }));
+                                }}
+                                options={categoryList.map(category => ({
+                                    id: category.id,
+                                    name: category.name // Thay bằng trường tên phù hợp trong API của bạn
+                                }))}
+                                loading={loadingCategory}
+                                placeholder="Chọn danh mục"
+                            />
                         </FormSection>
                     </div>
+
 
                     {/* Thể loại - Chiếm toàn bộ chiều rộng */}
                     <div className="sm:col-span-2">
@@ -566,7 +609,7 @@ const CreateFilm = ({ onClose }) => {
                             title="Thể loại phim"
                             bgColor="bg-purple-50"
                             items={genresList}
-                            selectedItems={newMovie.genres}
+                            selectedItems={newMovie.genre.map(id => genresList.find(g => g.id === id))}
                             selectedValue={selectedGenre}
                             setSelectedValue={setSelectedGenre}
                             onAdd={handleAddGenre}
@@ -583,7 +626,7 @@ const CreateFilm = ({ onClose }) => {
                             title="Diễn viên"
                             bgColor="bg-red-50"
                             items={performerList}
-                            selectedItems={newMovie.performer}
+                            selectedItems={newMovie.performer.map(id => performerList.find(p => p.id === id))}
                             selectedValue={selectedPerformer}
                             setSelectedValue={setSelectedPerformer}
                             onAdd={handleAddPerformer}
