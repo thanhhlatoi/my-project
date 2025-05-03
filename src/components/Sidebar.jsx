@@ -34,7 +34,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     }, [location.pathname]);
 
     const menu = [
-        { name: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/" },
+        { name: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/HomePage" },
         { name: "Film", icon: <Film size={20} />, path: "/FlimPage" },
         { name: "Genre", icon: <Tags size={20} />, path: "/genre" },
         { name: "Author", icon: <BookOpen size={20} />, path: "/author" },

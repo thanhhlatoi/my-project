@@ -25,20 +25,43 @@ const getAll = (page = 0, limit = 10, sortBy = 'id', order = 'asc') => {
   });
 };
 
-const add = (genre) => {
-  const token = getAuthToken();  // Lấy token từ nơi lưu trữ
+const add = async (formData) => {
+  const token = getAuthToken();
 
-  return axios.post(API_URL, genre, {
-    headers: {
-      Authorization: `Bearer ${token}`  // Thêm token vào header
+  try {
+    const response = await axios.post(API_URL, formData, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    // Chi tiết log lỗi
+    if (error.response) {
+      // Server trả về lỗi
+      console.error('Server Error Details:', {
+        status: error.response.status,
+        data: error.response.data,
+        headers: error.response.headers
+      });
+    } else if (error.request) {
+      // Request được gửi nhưng không nhận được response
+      console.error('No response received:', error.request);
+    } else {
+      // Lỗi trong quá trình setup request
+      console.error('Request setup error:', error.message);
     }
-  });
+
+    // Ném lỗi để component xử lý
+    throw error;
+  }
 };
 
-const update = (genre) => {
+const update = (film) => {
   const token = getAuthToken();  // Lấy token từ nơi lưu trữ
 
-  return axios.put(`${API_URL}/update/${genre.id}`, genre, {
+  return axios.put(`${API_URL}/update/${film.id}`, film, {
     headers: {
       Authorization: `Bearer ${token}`  // Thêm token vào header
     }

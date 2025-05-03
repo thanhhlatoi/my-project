@@ -48,8 +48,8 @@ const FilmWatch = () => {
 
         const video = videoRef.current;
         // Truyền id của phim vào URL nếu có
-        const videoPath = id ? `video_${id}/output.m3u8` : 'hh/output.m3u8';
-        const hlsUrl = `${BASE_URL}/api/videos/hls-stream?bucketName=thanh&path=${videoPath}`;
+        // const videoPath = id ? `video_${id}/output.m3u8` : 'hh/output.m3u8';
+        const hlsUrl = `${BASE_URL}/api/videos/hls-stream?bucketName=thanh&path=hh/output.m3u8`;
 
         if (video) {
             // Thêm event listeners

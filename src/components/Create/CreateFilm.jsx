@@ -390,7 +390,6 @@ const CreateFilm = ({ onClose }) => {
     };
 
     // Xử lý lưu dữ liệu
-    // Xử lý lưu dữ liệu
     const handleSave = async () => {
         try {
             // Kiểm tra dữ liệu trước khi gửi

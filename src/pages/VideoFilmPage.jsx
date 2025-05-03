@@ -1,98 +1,68 @@
 import React, { useState, useEffect } from 'react';
 import {Search, RefreshCw, Film, PlayCircle, Filter, PlusCircle} from 'lucide-react';
 import CreateVideoFilm from '../components/Create/CreateVideoFilm.jsx';
+import VideoFilmService from "../api/VideoFilmService.js";
+import { BASE_URL } from "../api/config.js";
 
 const VideoFilmPage = () => {
-    // Dữ liệu mẫu về phim với thêm thông tin
-    const [films, setFilms] = useState([
-        {
-            id: 1,
-            title: "Chi Hàng Xóm May Mắn",
-            videoFilm: "kk/output1.m3u8",
-            duration: "1h 45m",
-            genre: "Hài Hước",
-            thumbnailUrl: "/api/placeholder/300/200"
-        },
-        {
-            id: 2,
-            title: "Cuộc Phiêu Lưu Mới",
-            videoFilm: "kk/output2.m3u8",
-            duration: "2h 10m",
-            genre: "Phiêu Lưu",
-            thumbnailUrl: "/api/placeholder/300/200"
-        },
-        {
-            id: 3,
-            title: "Tình Yêu Vô Biên",
-            videoFilm: "kk/output3.m3u8",
-            duration: "1h 30m",
-            genre: "Lãng Mạn",
-            thumbnailUrl: "/api/placeholder/300/200"
-        }
-    ]);
-
+    const [videoFilms, setVideoFilms] = useState([]);
+    const [newFilm, setNewFilm] = useState({
+        title: '',
+        genre: '',
+        thumbnailUrl: '',
+        videoFilm: '',
+        duration: ''
+    });
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(false);
     const [selectedGenre, setSelectedGenre] = useState("");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-    // State cho form thêm phim
-    const [newFilm, setNewFilm] = useState({
-        title: "",
-        videoFilm: "",
-        duration: "",
-        genre: "",
-        thumbnailUrl: "/api/placeholder/300/200"
-    });
-
-    // Giả lập việc tải dữ liệu
-    const fetchFilms = () => {
+    const fetchFilms = async () => {
         setLoading(true);
-        setTimeout(() => {
+        try {
+            const response = await VideoFilmService.getAll(page, 10, 'id', 'asc');
+            setVideoFilms(response.data.data.content);
+            setTotalPages(response.data.data.totalPages);
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách phim:', error);
+            setVideoFilms([]);
+        } finally {
             setLoading(false);
-        }, 500);
+        }
     };
 
     useEffect(() => {
         fetchFilms();
-    }, []);
+    }, [page]);
 
-    // Lọc phim theo từ khóa tìm kiếm và thể loại
-    const filteredFilms = films.filter(film =>
-        film.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        (selectedGenre === "" || film.genre === selectedGenre)
-    );
+    // Filter films based on search term and selected genre
+    const filteredFilms = videoFilms.filter((film) => {
+        const movieProduct = film.movieProduct || {};
+        const matchesSearch = movieProduct.title &&
+            movieProduct.title.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesGenre = !selectedGenre ||
+            (movieProduct.genres &&
+                movieProduct.genres.some(genre => genre.name === selectedGenre));
+        return matchesSearch && matchesGenre;
+    });
 
-    // Danh sách thể loại
-    const genres = ["Hài Hước", "Phiêu Lưu", "Lãng Mạn"];
-
-    // Xử lý thêm phim mới
-    const handleAddFilm = () => {
-        // Validate form
-        if (!newFilm.title || !newFilm.videoFilm || !newFilm.duration || !newFilm.genre) {
-            alert("Vui lòng điền đầy đủ thông tin");
-            return;
+    // Handle adding a new film
+    const handleAddFilm = async (filmData) => {
+        try {
+            // eslint-disable-next-line no-undef
+            await add(filmData);
+            // Refresh danh sách phim sau khi thêm thành công
+            fetchFilms();
+            // Đóng modal
+            setIsAddModalOpen(false);
+        } catch (error) {
+            // Xử lý lỗi, có thể hiển thị thông báo cho người dùng
+            console.error('Lỗi khi thêm phim:', error);
         }
-
-        // Thêm phim mới
-        const filmToAdd = {
-            ...newFilm,
-            id: films.length + 1  // Tạo ID mới
-        };
-
-        setFilms([...films, filmToAdd]);
-
-        // Đóng modal và reset form
-        setIsAddModalOpen(false);
-        setNewFilm({
-            title: "",
-            videoFilm: "",
-            duration: "",
-            genre: "",
-            thumbnailUrl: "/api/placeholder/300/200"
-        });
     };
-
     return (
         <div className="bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen py-10">
             <div className="container mx-auto px-4">
@@ -119,19 +89,7 @@ const VideoFilmPage = () => {
                                     />
                                     <Search size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                 </div>
-                                <div className="relative">
-                                    <select
-                                        value={selectedGenre}
-                                        onChange={(e) => setSelectedGenre(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 text-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
-                                    >
-                                        <option value="">Tất cả thể loại</option>
-                                        {genres.map((genre) => (
-                                            <option key={genre} value={genre}>{genre}</option>
-                                        ))}
-                                    </select>
-                                    <Filter size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                </div>
+
                                 <button
                                     onClick={() => setIsAddModalOpen(true)}
                                     className="flex items-center justify-center gap-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300"
@@ -157,44 +115,63 @@ const VideoFilmPage = () => {
                     <div className="p-6">
                         {filteredFilms.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredFilms.map((film) => (
-                                    <div
-                                        key={film.id}
-                                        className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-lg transform transition-all hover:scale-105 hover:shadow-2xl"
-                                    >
-                                        <div className="relative">
-                                            <img
-                                                src={film.thumbnailUrl}
-                                                alt={film.title}
-                                                className="w-full h-48 object-cover"
-                                            />
-                                            <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
-                                                <PlayCircle size={48} className="text-white" />
-                                            </div>
-                                        </div>
-                                        <div className="p-4">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <div>
-                                                    <span className="text-xs text-gray-500 block mb-1">ID: {film.id}</span>
-                                                    <h3 className="text-lg font-bold text-gray-800">{film.title}</h3>
+                                {filteredFilms.map((film) => {
+                                    const movie = film.movieProduct || {};
+                                    return (
+                                        <div
+                                            key={film.id}
+                                            className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-lg transform transition-all hover:scale-105 hover:shadow-2xl"
+                                        >
+                                            <div className="relative">
+                                                <img
+                                                    src={movie.imgMovie
+                                                        ? `${BASE_URL}/api/movieProduct/view?bucketName=thanh&path=${movie.imgMovie}`
+                                                        : "/api/placeholder/400/320"}
+                                                    alt={movie.title}
+                                                    className="w-full h-48 object-cover"
+                                                    // onError={(e) => {
+                                                    //     e.target.src = "/api/placeholder/400/320";
+                                                    // }}
+                                                />
+                                                <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300">
+                                                    <PlayCircle size={48} className="text-white" />
                                                 </div>
-                                                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                                    {film.genre}
-                                                </span>
                                             </div>
-                                            <div className="flex justify-between items-center text-sm text-gray-600">
-                                                <span>Đường dẫn: {film.videoFilm}</span>
-                                                <span className="font-medium">{film.duration}</span>
+                                            <div className="p-4">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <div>
+                                                        <span className="text-xs text-gray-500 block mb-1">ID: {film.id}</span>
+                                                        <h3 className="text-lg font-bold text-gray-800">{movie.title}</h3>
+                                                    </div>
+                                                    {movie.genres && movie.genres.length > 0 && (
+                                                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                                            {movie.genres[0].name}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex justify-between items-center text-sm text-gray-600 mb-2">
+                                                    <span className="truncate max-w-xs">Đường dẫn: {film.videoFilm}</span>
+                                                    <span className="font-medium">{movie.time}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center text-xs text-gray-500">
+                                                    <div className="flex items-center gap-1">
+                                                        <span>👀 {movie.views} lượt xem</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <span>❤️ {movie.likes}</span>
+                                                        <span>👎 {movie.dislikes}</span>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center gap-2"
+                                                >
+                                                    <PlayCircle size={20} />
+                                                    Xem Phim
+                                                </button>
                                             </div>
-                                            <button
-                                                className="w-full mt-4 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center justify-center gap-2"
-                                            >
-                                                <PlayCircle size={20} />
-                                                Xem Phim
-                                            </button>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         ) : (
                             <div className="text-center py-12 bg-gray-50 rounded-lg">
@@ -220,13 +197,37 @@ const VideoFilmPage = () => {
                         )}
                     </div>
 
+                    {/* Pagination controls */}
+                    {totalPages > 1 && (
+                        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-center">
+                            <div className="flex space-x-2">
+                                <button
+                                    onClick={() => setPage(prev => Math.max(0, prev - 1))}
+                                    disabled={page === 0}
+                                    className={`px-4 py-2 rounded ${page === 0 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+                                >
+                                    Trước
+                                </button>
+                                <span className="px-4 py-2 bg-white border border-gray-300 rounded">
+                                    {page + 1} / {totalPages}
+                                </span>
+                                <button
+                                    onClick={() => setPage(prev => Math.min(totalPages - 1, prev + 1))}
+                                    disabled={page === totalPages - 1}
+                                    className={`px-4 py-2 rounded ${page === totalPages - 1 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
+                                >
+                                    Tiếp
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Sử dụng component CreateVideoFilm */}
                     <CreateVideoFilm
                         isOpen={isAddModalOpen}
                         onClose={() => setIsAddModalOpen(false)}
                         newFilm={newFilm}
                         setNewFilm={setNewFilm}
-                        genres={genres}
                         onAddFilm={handleAddFilm}
                     />
                 </div>
