@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Menu, Search, Bell, MessageCircle, Calendar, Settings, HelpCircle } from 'lucide-react';
+import { Menu, Search, Bell, MessageCircle, Calendar, Settings, HelpCircle, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Topbar = ({ toggleSidebar }) => {
+    const navigate = useNavigate();
     const [notifications, setNotifications] = useState(3);
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -16,6 +18,15 @@ const Topbar = ({ toggleSidebar }) => {
     const toggleProfile = () => {
         setIsProfileOpen(!isProfileOpen);
         if (isNotificationOpen) setIsNotificationOpen(false);
+    };
+
+    // Hàm đăng xuất
+    const handleLogout = () => {
+        // Xóa token khỏi localStorage
+        localStorage.removeItem('authToken');
+
+        // Chuyển hướng về trang đăng nhập
+        navigate('/');
     };
 
     return (
@@ -64,8 +75,8 @@ const Topbar = ({ toggleSidebar }) => {
                         <Bell size={20} />
                         {notifications > 0 && (
                             <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs flex items-center justify-center rounded-full">
-                {notifications}
-              </span>
+                                {notifications}
+                            </span>
                         )}
                     </button>
 
@@ -156,24 +167,25 @@ const Topbar = ({ toggleSidebar }) => {
 
                             <div className="py-1">
                                 <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Settings size={14} className="text-blue-600" />
-                  </span>
+                                    <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <Settings size={14} className="text-blue-600" />
+                                    </span>
                                     Account settings
                                 </button>
                                 <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
-                    <HelpCircle size={14} className="text-green-600" />
-                  </span>
+                                    <span className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                                        <HelpCircle size={14} className="text-green-600" />
+                                    </span>
                                     Help &amp; Support
                                 </button>
                             </div>
 
                             <div className="border-t py-1">
-                                <button className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                    </svg>
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium flex items-center gap-2"
+                                >
+                                    <LogOut size={14} />
                                     Logout
                                 </button>
                             </div>

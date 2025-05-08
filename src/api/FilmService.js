@@ -44,10 +44,7 @@ const request = async (method, url, data = null, params = null) => {
     }
 };
 
-// Hàm gọi API lấy danh sách phim
-// const getAll = (page = 0, limit = 10, sortBy = 'id', order = 'asc') => {
-//     return request('get', '', null, { page, limit, sortBy, order });
-// };
+
 
 //add
 const add = async (formData) => {

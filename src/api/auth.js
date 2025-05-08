@@ -1,7 +1,7 @@
 import { BASE_URL } from "./config.js";
 
 
-const API_URL = `${BASE_URL}/auth/login`;
+const API_URL = `${BASE_URL}/api/auth/login`;
 
 
 export const login = async (email, password) => {
