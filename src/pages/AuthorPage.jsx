@@ -35,7 +35,7 @@ const AuthorsPage = () => {
         setLoading(true);
         try {
             const response = await authorService.getAll(page, 10, 'id', 'asc');
-            setAuthors(response?.data?.data?.content || []);
+            setAuthors(response?.data?.content || []);
             setTotalPages(response?.data?.totalPages || 1);
         } catch (error) {
             console.error("Error fetching authors:", error);

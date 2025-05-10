@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/auth.js";
-
 const LoginForm = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -10,17 +9,26 @@ const LoginForm = () => {
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
+    // Sửa hàm handleLogin trong LoginForm.jsx
     const handleLogin = async (e) => {
-        e.preventDefault();
-        setError("");
+        e.preventDefault(); // Thêm dòng này
         setIsLoading(true);
+        setError("");
 
         try {
-            const data = await login(email, password);
-            localStorage.setItem("authToken", data.token);
-            navigate("/home");
-        } catch (err) {
-            setError(err.message || "Đã xảy ra lỗi khi đăng nhập");
+            const result = await login(email, password);
+
+            // Kiểm tra và lưu token - Để cho chắc, lưu trực tiếp ở đây
+            if (result.authentication && result.authentication.token) {
+                localStorage.setItem('authToken', result.authentication.token);
+                // Chuyển hướng sau khi đăng nhập thành công
+                navigate('/dashboard');
+            } else {
+                console.error('Token không tìm thấy trong phản hồi:', result);
+                setError('Không thể nhận token xác thực từ server');
+            }
+        } catch (error) {
+            setError('Đăng nhập thất bại: ' + error.message);
         } finally {
             setIsLoading(false);
         }

@@ -1,14 +1,32 @@
 import axios from 'axios';
 
-const getAuthToken = () => {
-    return localStorage.getItem('authToken');
-};
+class AuthTokenManager {
+    // Static method to get the auth token
+    static getToken() {
+        return localStorage.getItem('authToken');
+    }
+
+    // Static method to set the auth token
+    static setToken(token) {
+        localStorage.setItem('authToken', token);
+    }
+
+    // Static method to remove the auth token
+    static removeToken() {
+        localStorage.removeItem('authToken');
+    }
+
+    // Static method to check if token exists
+    static hasToken() {
+        return !!this.getToken();
+    }
+}
 
 const handleError = (error) => {
     console.error('API error:', error);
 
     if (error.response) {
-        // Log chi tiết lỗi từ server
+        // Detailed error logging from server
         console.error('Error response:', {
             status: error.response.status,
             data: error.response.data,
@@ -17,10 +35,13 @@ const handleError = (error) => {
 
         switch (error.response.status) {
             case 401:
-                console.error('Authentication error: Invalid token');
+                console.error('Authentication error: Invalid or expired token');
+                // Optional: Trigger logout or token refresh logic
+                AuthTokenManager.removeToken();
+                // Redirect to login or refresh token
                 break;
             case 403:
-                console.error('Authorization error: You do not have permission');
+                console.error('Authorization error: Insufficient permissions');
                 break;
             case 404:
                 console.error('Resource not found');
@@ -46,14 +67,15 @@ const createApiService = (baseUrl) => {
         headers: {
             'Content-Type': 'application/json'
         },
-        // Thêm timeout để tránh request bị treo
+        // Add timeout to prevent hanging requests
         timeout: 10000
     });
 
-    // Interceptor để thêm token vào mọi request
+    // Interceptor to add token to every request
     api.interceptors.request.use(
         config => {
-            const token = getAuthToken();
+            const token = AuthTokenManager.getToken();
+            console.log('Token being sent:', token); // Thêm log này
             if (token) {
                 config.headers['Authorization'] = `Bearer ${token}`;
             }
@@ -62,7 +84,7 @@ const createApiService = (baseUrl) => {
         error => Promise.reject(error)
     );
 
-    // Interceptor để xử lý lỗi chung
+    // Response interceptor for global error handling
     api.interceptors.response.use(
         response => response,
         error => {
@@ -72,7 +94,15 @@ const createApiService = (baseUrl) => {
     );
 
     return {
+        // Expose token management methods
+        auth: AuthTokenManager,
+
         getAll: async (page = 0, limit = 10, sortBy = 'id', order = 'asc') => {
+            // Kiểm tra token trước khi thực hiện request
+            if (!AuthTokenManager.hasToken()) {
+                throw new Error('No authentication token found');
+            }
+
             try {
                 const response = await api.get('', {
                     params: {
@@ -90,6 +120,11 @@ const createApiService = (baseUrl) => {
         },
 
         getById: async (id) => {
+            // Kiểm tra token trước khi thực hiện request
+            if (!AuthTokenManager.hasToken()) {
+                throw new Error('No authentication token found');
+            }
+
             try {
                 const response = await api.get(`/${id}`);
                 return response.data;
@@ -100,7 +135,13 @@ const createApiService = (baseUrl) => {
         },
 
         add: async (data) => {
+            // Kiểm tra token trước khi thực hiện request
+            if (!AuthTokenManager.hasToken()) {
+                throw new Error('No authentication token found');
+            }
+
             try {
+                // Sử dụng api đã được cấu hình với interceptor thay vì axios trực tiếp
                 const response = await api.post('', data);
                 return response.data;
             } catch (error) {
@@ -110,6 +151,11 @@ const createApiService = (baseUrl) => {
         },
 
         update: async (data) => {
+            // Kiểm tra token trước khi thực hiện request
+            if (!AuthTokenManager.hasToken()) {
+                throw new Error('No authentication token found');
+            }
+
             try {
                 const response = await api.put(`/update/${data.id}`, data);
                 return response.data;
@@ -120,8 +166,13 @@ const createApiService = (baseUrl) => {
         },
 
         delete: async (id) => {
+            // Kiểm tra token trước khi thực hiện request
+            if (!AuthTokenManager.hasToken()) {
+                throw new Error('No authentication token found');
+            }
+
             try {
-                const response = await api.delete(`/${id}`);
+                const response = await api.delete(`/delete/${id}`);
                 return response.data;
             } catch (error) {
                 console.error('Error in delete:', error);

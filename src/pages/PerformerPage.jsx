@@ -38,7 +38,7 @@ const PerformerPage = () => {
         setLoading(true);
         try {
             const response = await PerformerService.getAll(page, 10, sortBy, order, searchQuery);
-            setPerformer(response?.data?.data?.content || []);
+            setPerformer(response?.data?.content || []);
             setTotalPages(response?.data?.totalPages || 1);
         } catch (error) {
             console.error("Error fetching performers:", error);

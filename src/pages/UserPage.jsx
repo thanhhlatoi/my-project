@@ -40,9 +40,9 @@ const UserPage = () => {
         setLoading(true);
         try {
             const response = await userService.getAll(page, 10, 'id', 'asc');
-            if (response && response.data && response.data.data) {
-                setUsers(response.data.data);
-                setFilteredUsers(response.data.data);
+            if (response && response.data ) {
+                setUsers(response.data);
+                setFilteredUsers(response.data);
                 setTotalPages(1);
             }
         } catch (error) {

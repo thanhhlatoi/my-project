@@ -23,11 +23,18 @@ const CategoryPage = () => {
         setLoading(true);
         try {
             const response = await CategoryService.getAll(page, 10, 'id', 'asc');
-            const data = response.data.data;
-            setCategory(data.content);
-            setTotalPages(data.totalPages);
+            // Fix the data access to match the JSON structure
+            if (response && response.data) {
+                setCategory(response.data.content || []);
+                setTotalPages(response.data.totalPages || 1);
+            } else {
+                setCategory([]);
+                setTotalPages(1);
+            }
         } catch (error) {
             console.error('Lỗi khi lấy danh sách category:', error);
+            setCategory([]);
+            setTotalPages(1);
         } finally {
             setLoading(false);
         }

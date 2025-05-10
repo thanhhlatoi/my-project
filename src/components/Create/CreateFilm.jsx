@@ -246,7 +246,7 @@ const CreateFilm = ({ onClose }) => {
             setLoadingGenres(true);
             try {
                 const response = await GenreService.getAll(0, 100, 'id', 'asc');
-                const genresArray = response?.data?.data?.content;
+                const genresArray = response?.data?.content;
                 console.log("Thể loại:", response);
                 if (Array.isArray(genresArray)) {
                     setGenresList(genresArray);
@@ -264,7 +264,7 @@ const CreateFilm = ({ onClose }) => {
             setLoadingPerformers(true);
             try {
                 const response = await PerformerService.getAll(0, 100, 'id', 'asc');
-                const performerArray = response?.data?.data?.content;
+                const performerArray = response?.data?.content;
                 console.log("Diễn viên:", response);
 
                 if (Array.isArray(performerArray)) {
@@ -285,8 +285,8 @@ const CreateFilm = ({ onClose }) => {
                 const response = await AuthorService.getAll(0, 100, 'id', 'asc');
                 console.log('Tác giả:', response);
 
-                if (response?.data?.data?.content) {
-                    setAuthorList(response.data.data.content);
+                if (response?.data?.content) {
+                    setAuthorList(response.data.content);
                 } else {
                     setAuthorList([]);
                 }
@@ -303,8 +303,8 @@ const CreateFilm = ({ onClose }) => {
                 const response = await CategoryService.getAll(0, 100, 'id', 'asc');
                 console.log('Danh mục:', response);
 
-                if (response?.data?.data?.content) {
-                    setCategoryList(response.data.data.content);
+                if (response?.data?.content) {
+                    setCategoryList(response.data.content);
                 } else {
                     setCategoryList([]);
                 }

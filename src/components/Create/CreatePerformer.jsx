@@ -6,9 +6,9 @@ import PerformerService from "../../api/PerformerService.js";
 const CreatePerformer = ({
                              isOpen,
                              closeModal,
-                             newPerformer = {}, // Đặt giá trị mặc định là object rỗng
+                             newPerformer = null, // Đặt giá trị mặc định là object rỗng
                              setNewPerformer,
-                             isEditing,
+                             isEditing = false,
                              onSuccess
                          }) => {
     const performer = newPerformer || {};
@@ -80,21 +80,59 @@ const CreatePerformer = ({
 
         const form = new FormData();
         form.append("fullName", formData.fullName);
-        form.append("birthday", formData.birthday);
+
+        // Chỉ thêm birthday nếu có giá trị
+        if (formData.birthday) {
+            form.append("birthday", formData.birthday);
+        }
+
         form.append("gender", formData.gender);
-        form.append("country", formData.country);
-        form.append("description", formData.description);
+
+        // Chỉ thêm các trường không bắt buộc nếu có giá trị
+        if (formData.country) {
+            form.append("country", formData.country);
+        }
+
+        if (formData.description) {
+            form.append("description", formData.description);
+        }
+
         if (formData.fileAvatar) {
             form.append("fileAvatar", formData.fileAvatar);
         }
+        // Kiểm tra token từ localStorage trực tiếp để debug
+        const token = localStorage.getItem('authToken');
+        console.log('Direct token from localStorage:', token);
+
+        // Và kiểm tra từ service
+        const serviceToken = PerformerService.auth.getToken();
+        console.log('Token from service:', serviceToken);
+
+        if (!token) {
+            alert('Vui lòng đăng nhập lại');
+            return;
+        }
+
 
         try {
-            const result = await PerformerService.add(form);
-            console.log("Author added:", result);
-            if (onSuccess) onSuccess(); // ⬅ gọi lại hàm load
-            closeModal();  // đóng modal
+            if (isEditing && newPerformer?.id) {
+                // Nếu đang chỉnh sửa, gọi API update
+                await PerformerService.update(newPerformer.id, form);
+                console.log("Author updated:", newPerformer.id);
+            } else {
+                // Nếu thêm mới, gọi API add
+                await PerformerService.add(form);
+                console.log("Author added successfully");
+            }
+
+            // Gọi callback onSuccess nếu có
+            if (onSuccess) onSuccess();
+
+            // Đóng modal
+            closeModal();
         } catch (error) {
             console.error("Submit failed:", error);
+            alert(error.response?.data?.message || "Không thể lưu tác giả");
         }
     };
 

@@ -18,16 +18,33 @@ const Genre = () => {
     fetchGenres();
   }, [page]);
 
-  // Lấy danh sách thể loại
+// Lấy danh sách thể loại
   const fetchGenres = async () => {
     setLoading(true);
     try {
       const response = await GenreService.getAll(page, 10, 'id', 'asc');
-      const data = response.data.data;
-      setGenres(data.content);
-      setTotalPages(data.totalPages);
+      // Kiểm tra xem response và response.data có tồn tại trước khi truy cập thuộc tính của chúng
+      if (response && response.data) {
+        // Đường dẫn chính xác đến content dựa trên cấu trúc phản hồi API của bạn
+        const genresData = response.data;
+        if (genresData) {
+          setGenres(genresData.content || []);
+          setTotalPages(genresData.totalPages || 1);
+        } else {
+          // Xử lý trường hợp thuộc tính data không tồn tại
+          setGenres([]);
+          setTotalPages(1);
+        }
+      } else {
+        // Xử lý trường hợp response hoặc response.data không tồn tại
+        setGenres([]);
+        setTotalPages(1);
+      }
     } catch (error) {
       console.error('Lỗi khi lấy danh sách genre:', error);
+      // Đặt lại trạng thái khi có lỗi
+      setGenres([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -37,14 +54,37 @@ const Genre = () => {
   const handleAddGenre = async () => {
     if (newGenre.name.trim() === '') return;
 
+    // Kiểm tra token từ localStorage trực tiếp để debug
+    const token = localStorage.getItem('authToken');
+    console.log('Direct token from localStorage:', token);
+
+    // Và kiểm tra từ service
+    const serviceToken = GenreService.auth.getToken();
+    console.log('Token from service:', serviceToken);
+
+    if (!token) {
+      alert('Vui lòng đăng nhập lại');
+      return;
+    }
+
     setLoading(true);
     try {
-      await GenreService.add(newGenre);
+      const response = await GenreService.add({
+        ...newGenre,
+        active: true
+      });
+
+      console.log('Add Genre Response:', response);
       setNewGenre({ name: '' });
       fetchGenres();
       setIsModalOpen(false);
     } catch (err) {
-      console.error('Lỗi khi thêm genre:', err);
+      console.error('Chi tiết lỗi khi thêm genre:', err);
+      if (err.response) {
+        console.error('Error Response:', err.response.data);
+        console.error('Error Status:', err.response.status);
+      }
+      alert('Không thể thêm thể loại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }

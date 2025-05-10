@@ -6,19 +6,16 @@ import { BASE_URL } from "../../api/config.js";
 const CreateAuthor = ({
                           isOpen,
                           closeModal,
-                          newAuthor = {},
-                          setNewAuthor,
+                          newAuthor = null,
                           isEditing = false,
                           onSuccess
-
                       }) => {
-    const author = newAuthor || {};
-
     // Khởi tạo state ban đầu
     const [formData, setFormData] = useState({
+        id: '' ,
         fullName: '',
         birthday: '',
-        gender: '',
+        gender: 'true', // Đặt giá trị mặc định
         country: '',
         description: '',
         fileAvatar: null
@@ -26,32 +23,51 @@ const CreateAuthor = ({
 
     const [avatarPreview, setAvatarPreview] = useState(null);
 
-    // Cập nhật form data khi modal mở và có dữ liệu author
+    // Reset form khi modal đóng
     useEffect(() => {
-        if (isOpen) {
-            // Chỉ cập nhật các trường từ author nếu chúng tồn tại
-            setFormData(prev => ({
-                ...prev,
-                fullName: author.fullName || prev.fullName,
-                birthday: author.birthday || prev.birthday,
-                gender: author.gender?.toString() || prev.gender,
-                country: author.country || prev.country,
-                description: author.description || prev.description
-                // Không reset fileAvatar
-            }));
+        if (!isOpen) {
+            setFormData({
+                fullName: '',
+                birthday: '',
+                gender: 'true',
+                country: '',
+                description: '',
+                fileAvatar: null
+            });
+            setAvatarPreview(null);
+        }
+    }, [isOpen]);
+
+    // Cập nhật form data khi modal mở và có dữ liệu newAuthor
+    useEffect(() => {
+        if (isOpen && newAuthor) {
+            // Format ngày sinh nếu có
+            const formattedBirthday = newAuthor.birthday
+                ? new Date(newAuthor.birthday).toISOString().split('T')[0]
+                : '';
+
+            // Chỉ cập nhật các trường từ newAuthor nếu chúng tồn tại
+            setFormData({
+                fullName: newAuthor.fullName || '',
+                birthday: formattedBirthday,
+                gender: newAuthor.gender?.toString() || 'true',
+                country: newAuthor.country || '',
+                description: newAuthor.description || '',
+                fileAvatar: null // Luôn reset fileAvatar
+            });
 
             // Xử lý avatar preview
-            if (author.avatar) {
+            if (newAuthor.avatar) {
                 setAvatarPreview(
-                    author.avatar.startsWith('http')
-                        ? author.avatar
-                        : `${BASE_URL}/api/videos/view?bucketName=thanh&path=${author.avatar}`
+                    newAuthor.avatar.startsWith('http')
+                        ? newAuthor.avatar
+                        : `${BASE_URL}/api/videos/view?bucketName=thanh&path=${newAuthor.avatar}`
                 );
             } else {
                 setAvatarPreview(null);
             }
         }
-    }, [isOpen, author]);
+    }, [isOpen, newAuthor]);
 
     const handleInputChange = ({ target }) => {
         const { name, value, type, checked } = target;
@@ -60,7 +76,6 @@ const CreateAuthor = ({
             [name]: type === 'checkbox' ? checked : value
         }));
     };
-
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -73,33 +88,67 @@ const CreateAuthor = ({
                 ...prev,
                 fileAvatar: file
             }));
-
-            setNewAuthor(prev => ({
-                ...prev,
-                fileAvatar: `avatars/${file.name}`
-            }));
         }
     };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         const form = new FormData();
         form.append("fullName", formData.fullName);
-        form.append("birthday", formData.birthday);
+
+        // Chỉ thêm birthday nếu có giá trị
+        if (formData.birthday) {
+            form.append("birthday", formData.birthday);
+        }
+
         form.append("gender", formData.gender);
-        form.append("country", formData.country);
-        form.append("description", formData.description);
+
+        // Chỉ thêm các trường không bắt buộc nếu có giá trị
+        if (formData.country) {
+            form.append("country", formData.country);
+        }
+
+        if (formData.description) {
+            form.append("description", formData.description);
+        }
+
         if (formData.fileAvatar) {
             form.append("fileAvatar", formData.fileAvatar);
         }
+        // Kiểm tra token từ localStorage trực tiếp để debug
+        const token = localStorage.getItem('authToken');
+        console.log('Direct token from localStorage:', token);
+
+        // Và kiểm tra từ service
+        const serviceToken = AuthorService.auth.getToken();
+        console.log('Token from service:', serviceToken);
+
+        if (!token) {
+            alert('Vui lòng đăng nhập lại');
+            return;
+        }
+
 
         try {
-            const result = await AuthorService.add(form);
-            console.log("Author added:", result);
-            if (onSuccess) onSuccess(); // ⬅ gọi lại hàm load
-            closeModal();  // đóng modal
+            if (isEditing && newAuthor?.id) {
+                // Nếu đang chỉnh sửa, gọi API update
+                await AuthorService.update(newAuthor.id, form);
+                console.log("Author updated:", newAuthor.id);
+            } else {
+                // Nếu thêm mới, gọi API add
+                await AuthorService.add(form);
+                console.log("Author added successfully");
+            }
+
+            // Gọi callback onSuccess nếu có
+            if (onSuccess) onSuccess();
+
+            // Đóng modal
+            closeModal();
         } catch (error) {
             console.error("Submit failed:", error);
+            alert(error.response?.data?.message || "Không thể lưu tác giả");
         }
     };
 
@@ -119,6 +168,14 @@ const CreateAuthor = ({
                         <div className="fixed inset-0 bg-black bg-opacity-30" />
                     </Transition.Child>
 
+                    {/* This element is to trick the browser into centering the modal contents. */}
+                    <span
+                        className="inline-block h-screen align-middle"
+                        aria-hidden="true"
+                    >
+                        &#8203;
+                    </span>
+
                     <Transition.Child
                         as={Fragment}
                         enter="ease-out duration-300"
@@ -133,7 +190,7 @@ const CreateAuthor = ({
                                 {isEditing ? 'Edit Author' : 'Create Author'}
                             </Dialog.Title>
 
-                            <form  onSubmit={handleSubmit} className="space-y-4 mt-4">
+                            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
                                 <div>
                                     <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">Full Name</label>
                                     <input
@@ -167,7 +224,7 @@ const CreateAuthor = ({
                                         onChange={handleInputChange}
                                         className="w-full border border-gray-300 rounded-md px-3 py-2"
                                     >
-                                        <option value="true">Male</option>
+                                        <option value="true">Nam</option>
                                         <option value="false">Female</option>
                                     </select>
                                 </div>

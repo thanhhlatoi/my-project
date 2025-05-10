@@ -64,7 +64,7 @@ const AuthorDetails = ({
 
                                     <div className="flex justify-between border-b pb-2">
                                         <span className="font-medium">Gender:</span>
-                                        <span>{selectedAuthor.gender ? 'Male' : 'Female'}</span>
+                                        <span>{selectedAuthor.gender ? 'Nam' : 'Nu'}</span>
                                     </div>
 
                                     {selectedAuthor.describe && (
