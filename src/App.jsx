@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import {BrowserRouter as Router, Routes, Route, useLocation, useParams} from "react-router-dom";
 import LoginForm from "./pages/LoginForm";
 import HomePage from "./pages/HomePage";
 import Genre from "./pages/Genre";
@@ -13,6 +13,7 @@ import FilmWatch from "./components/FilmWatch.jsx";
 import User from "./pages/UserPage";
 import Category from "./pages/CategoryPage";
 import VideoFilm from "./pages/VideoFilmPage";
+import WatchPage from "./pages/WatchPage.jsx";
 function App() {
     // Kiểm tra xem có đang ở trang login hay không
     const location = useLocation();
@@ -36,6 +37,7 @@ function App() {
                     <Route path="/user" element={<User />} />
                     <Route path="/category" element={<Category />} />
                     <Route path="/videoFilm" element={<VideoFilm />} />
+                    <Route path="/watch/:id" element={<WatchPage />} />
                 </Routes>
             </main>
         </div>
@@ -50,5 +52,8 @@ function AppWrapper() {
         </Router>
     );
 }
-
+function WatchPageWrapper() {
+    const { videoId } = useParams();
+    return <WatchPage videoId={videoId} />;
+}
 export default AppWrapper;

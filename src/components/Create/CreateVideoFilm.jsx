@@ -9,7 +9,6 @@ const CreateVideoFilm = ({
                              onAddFilm
                          }) => {
     const [movies, setMovies] = useState([]);
-    const [videoFiles, setVideoFiles] = useState([]);
     const [selectedMovie, setSelectedMovie] = useState(null);
     const [selectedVideoFile, setSelectedVideoFile] = useState(null);
     const [error, setError] = useState('');
@@ -29,7 +28,6 @@ const CreateVideoFilm = ({
         if (isOpen) {
             fetchMovies();
             // Reset state khi mở modal
-            setVideoFiles([]);
             setSelectedMovie(null);
             setSelectedVideoFile(null);
             setError('');
@@ -53,7 +51,6 @@ const CreateVideoFilm = ({
                 return;
             }
 
-            setVideoFiles(videoFileList);
             setSelectedVideoFile(videoFileList[0]);
             setError('');
         }
@@ -74,7 +71,13 @@ const CreateVideoFilm = ({
         try {
             // Tạo FormData
             const formData = new FormData();
-            formData.append('fileVideo', selectedVideoFile);
+
+            // Debug: In ra thông tin để kiểm tra
+            console.log('Selected movie ID:', selectedMovie.id, 'Type:', typeof selectedMovie.id);
+            console.log('Selected file:', selectedVideoFile.name, 'Size:', selectedVideoFile.size);
+
+            // Đảm bảo tên tham số đúng
+            formData.append('file', selectedVideoFile);
             formData.append('movieProductId', selectedMovie.id);
 
             // Gọi service để thêm phim
@@ -91,15 +94,22 @@ const CreateVideoFilm = ({
             // Đóng modal
             onClose();
         } catch (error) {
-            // Xử lý lỗi chi tiết
             console.error('Lỗi khi thêm phim:', error);
 
-            // Hiển thị lỗi chi tiết từ server hoặc thông báo chung
-            setError(
-                error.response?.data?.message ||
-                error.message ||
-                'Có lỗi xảy ra khi thêm phim'
-            );
+            // Hiển thị lỗi chi tiết
+            let errorMessage = 'Có lỗi xảy ra khi thêm phim';
+
+            if (error.response) {
+                console.log('Error response data:', error.response.data);
+                errorMessage = error.response.data.error || error.response.data.message || errorMessage;
+            } else if (error.data) {
+                console.log('Error data:', error.data);
+                errorMessage = error.data.error || error.data.message || errorMessage;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            setError(errorMessage);
         }
     };
 

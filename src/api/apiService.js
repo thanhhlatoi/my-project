@@ -1,184 +1,138 @@
+// apiService.js
 import axios from 'axios';
 
-class AuthTokenManager {
-    // Static method to get the auth token
-    static getToken() {
-        return localStorage.getItem('authToken');
-    }
-
-    // Static method to set the auth token
-    static setToken(token) {
-        localStorage.setItem('authToken', token);
-    }
-
-    // Static method to remove the auth token
-    static removeToken() {
-        localStorage.removeItem('authToken');
-    }
-
-    // Static method to check if token exists
-    static hasToken() {
-        return !!this.getToken();
-    }
-}
-
-const handleError = (error) => {
-    console.error('API error:', error);
-
-    if (error.response) {
-        // Detailed error logging from server
-        console.error('Error response:', {
-            status: error.response.status,
-            data: error.response.data,
-            headers: error.response.headers
-        });
-
-        switch (error.response.status) {
-            case 401:
-                console.error('Authentication error: Invalid or expired token');
-                // Optional: Trigger logout or token refresh logic
-                AuthTokenManager.removeToken();
-                // Redirect to login or refresh token
-                break;
-            case 403:
-                console.error('Authorization error: Insufficient permissions');
-                break;
-            case 404:
-                console.error('Resource not found');
-                break;
-            case 500:
-                console.error('Internal Server Error');
-                break;
-            default:
-                console.error('Unknown error');
-        }
-    } else if (error.request) {
-        console.error('No response received:', error.request);
-    } else {
-        console.error('Error setting up request:', error.message);
-    }
-
-    throw error;
+// Hàm lấy token từ localStorage (hoặc sessionStorage, hoặc state)
+const getAuthToken = () => {
+    return localStorage.getItem('authToken');
 };
 
-const createApiService = (baseUrl) => {
-    const api = axios.create({
-        baseURL: baseUrl,
+/**
+ * Tạo API service với các phương thức CRUD cơ bản
+ * @param {string} baseURL - Base URL cho API endpoint
+ * @returns {Object} - Object chứa các phương thức API
+ */
+const createApiService = (baseURL) => {
+    // Kiểm tra đầu vào
+    if (!baseURL) {
+        console.error('baseURL không được cung cấp cho createApiService');
+        throw new Error('baseURL là bắt buộc');
+    }
+
+    // Tạo instance axios
+    const apiClient = axios.create({
+        baseURL: baseURL,
         headers: {
             'Content-Type': 'application/json'
-        },
-        // Add timeout to prevent hanging requests
-        timeout: 10000
+        }
     });
 
-    // Interceptor to add token to every request
-    api.interceptors.request.use(
-        config => {
-            const token = AuthTokenManager.getToken();
-            console.log('Token being sent:', token); // Thêm log này
+    // Thêm interceptor để tự động thêm token vào header
+    apiClient.interceptors.request.use(
+        (config) => {
+            const token = getAuthToken();
             if (token) {
                 config.headers['Authorization'] = `Bearer ${token}`;
             }
             return config;
         },
-        error => Promise.reject(error)
-    );
-
-    // Response interceptor for global error handling
-    api.interceptors.response.use(
-        response => response,
-        error => {
-            handleError(error);
+        (error) => {
             return Promise.reject(error);
         }
     );
 
+    // Auth manager
+    const auth = {
+        getToken: getAuthToken,
+        setToken: (token) => localStorage.setItem('authToken', token),
+        removeToken: () => localStorage.removeItem('authToken'),
+        hasToken: () => !!getAuthToken()
+    };
+
+    // Các phương thức CRUD cơ bản
     return {
-        // Expose token management methods
-        auth: AuthTokenManager,
-
+        // Lấy tất cả items, có hỗ trợ phân trang
         getAll: async (page = 0, limit = 10, sortBy = 'id', order = 'asc') => {
-            // Kiểm tra token trước khi thực hiện request
-            if (!AuthTokenManager.hasToken()) {
-                throw new Error('No authentication token found');
-            }
-
             try {
-                const response = await api.get('', {
-                    params: {
-                        page,
-                        limit,
-                        sortBy,
-                        order
-                    }
+                const response = await apiClient.get('', {
+                    params: { page, limit, sortBy, order }
                 });
                 return response.data;
             } catch (error) {
-                console.error('Error in getAll:', error);
+                console.error('Lỗi khi lấy danh sách:', error);
                 throw error;
             }
         },
 
+        // Lấy item theo ID
         getById: async (id) => {
-            // Kiểm tra token trước khi thực hiện request
-            if (!AuthTokenManager.hasToken()) {
-                throw new Error('No authentication token found');
-            }
-
             try {
-                const response = await api.get(`/${id}`);
+                const response = await apiClient.get(`/${id}`);
                 return response.data;
             } catch (error) {
-                console.error('Error in getById:', error);
+                console.error(`Lỗi khi lấy item ID=${id}:`, error);
                 throw error;
             }
         },
 
-        add: async (data) => {
-            // Kiểm tra token trước khi thực hiện request
-            if (!AuthTokenManager.hasToken()) {
-                throw new Error('No authentication token found');
-            }
-
+        // Thêm item mới
+        add: async (item) => {
             try {
-                // Sử dụng api đã được cấu hình với interceptor thay vì axios trực tiếp
-                const response = await api.post('', data);
-                return response.data;
+                // Kiểm tra xem item có phải là FormData không
+                if (item instanceof FormData) {
+                    // Nếu là FormData, đổi Content-Type
+                    const response = await apiClient.post('', item, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    });
+                    return response.data;
+                } else {
+                    // Nếu là JSON bình thường
+                    const response = await apiClient.post('', item);
+                    return response.data;
+                }
             } catch (error) {
-                console.error('Error in add:', error);
+                console.error('Lỗi khi thêm item:', error);
                 throw error;
             }
         },
 
-        update: async (data) => {
-            // Kiểm tra token trước khi thực hiện request
-            if (!AuthTokenManager.hasToken()) {
-                throw new Error('No authentication token found');
-            }
-
+        // Cập nhật item
+        update: async (id, item) => {
             try {
-                const response = await api.put(`/update/${data.id}`, data);
-                return response.data;
+                // Kiểm tra xem item có phải là FormData không
+                if (item instanceof FormData) {
+                    // Nếu là FormData, đổi Content-Type
+                    const response = await apiClient.put(`/update/${id}`, item, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    });
+                    return response.data;
+                } else {
+                    // Nếu là JSON bình thường
+                    const response = await apiClient.put(`/update/${id}`, item);
+                    return response.data;
+                }
             } catch (error) {
-                console.error('Error in update:', error);
+                console.error(`Lỗi khi cập nhật item ID=${id}:`, error);
                 throw error;
             }
         },
 
+        // Xóa item
         delete: async (id) => {
-            // Kiểm tra token trước khi thực hiện request
-            if (!AuthTokenManager.hasToken()) {
-                throw new Error('No authentication token found');
-            }
-
             try {
-                const response = await api.delete(`/delete/${id}`);
+                const response = await apiClient.delete(`/delete/${id}`);
                 return response.data;
             } catch (error) {
-                console.error('Error in delete:', error);
+                console.error(`Lỗi khi xóa item ID=${id}:`, error);
                 throw error;
             }
-        }
+        },
+
+        // Export auth manager
+        auth
     };
 };
 

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/auth.js";
+import AuthService from "../api/auth";
+
 const LoginForm = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -9,26 +11,34 @@ const LoginForm = () => {
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
-    // Sửa hàm handleLogin trong LoginForm.jsx
     const handleLogin = async (e) => {
-        e.preventDefault(); // Thêm dòng này
+        e.preventDefault();
         setIsLoading(true);
         setError("");
 
         try {
             const result = await login(email, password);
 
-            // Kiểm tra và lưu token - Để cho chắc, lưu trực tiếp ở đây
-            if (result.authentication && result.authentication.token) {
+            // Kiểm tra kết quả đăng nhập
+            if (result && result.authentication) {
+                // Lưu thông tin xác thực vào AuthService
+                AuthService.saveAuth(result.authentication);
+
+                // Lưu token cũ để tương thích với code hiện tại
                 localStorage.setItem('authToken', result.authentication.token);
-                // Chuyển hướng sau khi đăng nhập thành công
-                navigate('/dashboard');
+
+                // Kiểm tra vai trò và điều hướng
+                if (AuthService.isAdmin()) {
+                    // Nếu là ADMIN, chuyển đến trang quản trị
+                    navigate('/dashboard');
+                }
             } else {
-                console.error('Token không tìm thấy trong phản hồi:', result);
+                console.error('Không tìm thấy thông tin xác thực trong phản hồi:', result);
                 setError('Không thể nhận token xác thực từ server');
             }
         } catch (error) {
-            setError('Đăng nhập thất bại: ' + error.message);
+            setError('Đăng nhập thất bại: ' + (error.message || 'Lỗi không xác định'));
+            console.error('Chi tiết lỗi đăng nhập:', error);
         } finally {
             setIsLoading(false);
         }
