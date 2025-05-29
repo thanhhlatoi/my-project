@@ -1,5 +1,5 @@
 import React from "react";
-import {BrowserRouter as Router, Routes, Route, useLocation, useParams} from "react-router-dom";
+import {BrowserRouter as Router, Routes, Route, useLocation, useParams, Navigate} from "react-router-dom";
 import LoginForm from "./pages/LoginForm";
 import HomePage from "./pages/HomePage";
 import Genre from "./pages/Genre";
@@ -14,6 +14,9 @@ import User from "./pages/UserPage";
 import Category from "./pages/CategoryPage";
 import VideoFilm from "./pages/VideoFilmPage";
 import WatchPage from "./pages/WatchPage.jsx";
+import AnalyticsPage from "./pages/AnalyticsPage.jsx";
+import SettingsPage from "./pages/SettingsPage.jsx";
+
 function App() {
     // Kiểm tra xem có đang ở trang login hay không
     const location = useLocation();
@@ -27,9 +30,10 @@ function App() {
             <main className={!isLoginPage ? "flex-1 ml-64 p-6" : "flex-1"}>
                 <Routes>
                     <Route path="/" element={<LoginForm />} />
-                    <Route path="/home" element={<HomePage />} />
+                    <Route path="/dashboard" element={<HomePage />} />
+                    <Route path="/HomePage" element={<Navigate to="/dashboard" replace />} />
                     <Route path="/genre" element={<Genre />} />
-                    <Route path="/flimPage" element={<FilmPage />} />
+                    <Route path="/FlimPage" element={<FilmPage />} />
                     <Route path="/film/:id" element={<FilmDetail />} />
                     <Route path="/movies" element={<FilmWatch />} />
                     <Route path="/author" element={<Author />} />
@@ -37,6 +41,8 @@ function App() {
                     <Route path="/user" element={<User />} />
                     <Route path="/category" element={<Category />} />
                     <Route path="/videoFilm" element={<VideoFilm />} />
+                    <Route path="/analytics" element={<AnalyticsPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
                     <Route path="/watch/:id" element={<WatchPage />} />
                 </Routes>
             </main>

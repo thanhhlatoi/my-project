@@ -10,7 +10,10 @@ import {
     LogOut,
     Tags,
     ChevronDown,
-    ChevronRight
+    ChevronRight,
+    PlaySquare,
+    FolderOpen,
+    BarChart3
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -34,17 +37,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     }, [location.pathname]);
 
     const menu = [
-        { name: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/HomePage" },
+        { name: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/dashboard" },
         { name: "Film", icon: <Film size={20} />, path: "/FlimPage" },
         { name: "Genre", icon: <Tags size={20} />, path: "/genre" },
         { name: "Author", icon: <BookOpen size={20} />, path: "/author" },
         { name: "Performer", icon: <User size={20} />, path: "/performer" },
         { name: "User", icon: <Users size={20} />, path: "/user" },
-        { name: "Category", icon: <Users size={20} />, path: "/category" },
-        { name: "VideoFilm", icon: <Users size={20} />, path: "/videoFilm" },
+        { name: "Category", icon: <FolderOpen size={20} />, path: "/category" },
+        { name: "VideoFilm", icon: <PlaySquare size={20} />, path: "/videoFilm" },
+        { name: "Analytics", icon: <BarChart3 size={20} />, path: "/analytics" },
     ];
 
     const pages = [
+        { name: "Settings", icon: <Settings size={20} />, path: "/settings" },
         { name: "Calendar", icon: <Calendar size={20} />, path: "/calendar" },
         { name: "Contact", icon: <Contact size={20} />, path: "/contact" },
     ];

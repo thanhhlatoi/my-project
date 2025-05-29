@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // API endpoint cho authentication
-const API_URL = 'http://192.168.1.73:8082/api/auth';
+const API_URL = 'http://192.168.100.193:8082/api/auth';
 
 // Hàm login - gọi API đăng nhập
 const login = async (email, password) => {
