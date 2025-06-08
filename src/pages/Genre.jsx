@@ -90,13 +90,17 @@ const Genre = () => {
 
     setLoading(true);
     try {
-      const response = await GenreService.update(editGenre);
+      console.log('Updating genre with ID:', editGenre.id);
+      const response = await GenreService.update(editGenre.id, editGenre);
       if (response.status === 200) {
         setEditGenre(null);
         fetchGenres();
+      } else {
+        alert('Cập nhật thể loại thất bại. Vui lòng thử lại.');
       }
     } catch (err) {
       console.error('Lỗi khi cập nhật thể loại:', err);
+      alert('Có lỗi xảy ra khi cập nhật thể loại: ' + (err.message || 'Lỗi không xác định'));
     } finally {
       setLoading(false);
     }

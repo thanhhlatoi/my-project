@@ -138,7 +138,7 @@ const AuthorsPage = () => {
             };
 
             if (isEditing) {
-                await authorService.update(formattedAuthor);
+                await authorService.update(newAuthor.id, formattedAuthor);
             } else {
                 await authorService.add(formattedAuthor);
             }
@@ -170,7 +170,13 @@ const AuthorsPage = () => {
             fetchData();
         } catch (err) {
             console.error("Error deleting author:", err);
-            alert("Failed to delete author. Please try again.");
+            let errorMessage = "Failed to delete author. Please try again.";
+            if (err.response && err.response.data && err.response.data.message) {
+                errorMessage += " Reason: " + err.response.data.message;
+            } else if (err.message) {
+                errorMessage += " Reason: " + err.message;
+            }
+            alert(errorMessage);
         }
     };
 

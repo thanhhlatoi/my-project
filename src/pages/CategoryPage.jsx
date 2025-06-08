@@ -24,9 +24,7 @@ const CategoryPage = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [newCategory, setNewCategory] = useState({
         name: '',
-        description: '',
-        color: '#3B82F6',
-        icon: '📂'
+        description: ''
     });
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [categoryToDelete, setCategoryToDelete] = useState(null);
@@ -108,9 +106,7 @@ const CategoryPage = () => {
         setIsEditing(false);
         setNewCategory({
             name: '',
-            description: '',
-            color: '#3B82F6',
-            icon: '📂'
+            description: ''
         });
         setIsAddModalOpen(true);
     };
@@ -130,7 +126,7 @@ const CategoryPage = () => {
     const handleSubmit = async () => {
         try {
             if (isEditing) {
-                await CategoryService.update(newCategory);
+                await CategoryService.update(newCategory.id, newCategory);
             } else {
                 await CategoryService.add(newCategory);
             }
@@ -139,7 +135,13 @@ const CategoryPage = () => {
             fetchData();
         } catch (err) {
             console.error("Error saving category:", err);
-            alert("Failed to save category. Please try again.");
+            let errorMessage = "Failed to save category. Please try again.";
+            if (err.response && err.response.data && err.response.data.message) {
+                errorMessage += " Reason: " + err.response.data.message;
+            } else if (err.message) {
+                errorMessage += " Reason: " + err.message;
+            }
+            alert(errorMessage);
         }
     };
 
@@ -161,7 +163,13 @@ const CategoryPage = () => {
             fetchData();
         } catch (err) {
             console.error("Error deleting category:", err);
-            alert("Failed to delete category. Please try again.");
+            let errorMessage = "Failed to delete category. Please try again.";
+            if (err.response && err.response.data && err.response.data.message) {
+                errorMessage += " Reason: " + err.response.data.message;
+            } else if (err.message) {
+                errorMessage += " Reason: " + err.message;
+            }
+            alert(errorMessage);
         }
     };
 
