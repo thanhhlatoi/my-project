@@ -3,6 +3,7 @@ import Layout from '../layouts/layout.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import SearchBar from '../components/SearchBar.jsx';
 import DataTable from '../components/DataTable.jsx';
+import Pagination from '../components/Pagination.jsx';
 import CategoryService from '../api/CategoryService.js';
 import CreateCategory from '../components/Create/CreateCategory.jsx';
 import CategoryDetails from '../components/Update/CategoryDetails.jsx';
@@ -195,12 +196,6 @@ const CategoryPage = () => {
             key: 'name',
             render: (category) => (
                 <div className="flex items-center gap-3">
-                    <div 
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold"
-                        style={{ backgroundColor: category.color || '#3B82F6' }}
-                    >
-                        {category.icon || '📂'}
-                    </div>
                     <div>
                         <div className="font-medium text-gray-900">{category.name}</div>
                         {category.description && (
@@ -246,10 +241,6 @@ const CategoryPage = () => {
                     addButtonText="Add New Category"
                     onAddClick={openAddModal}
                     gradient="from-amber-600 to-amber-700"
-                    showPagination={totalPages > 1}
-                    currentPage={page}
-                    totalPages={totalPages}
-                    onPageChange={setPage}
                 />
                 
                 {/* Search Bar */}
@@ -273,6 +264,16 @@ const CategoryPage = () => {
                     onDelete={confirmDelete}
                     emptyMessage="No categories found"
                 />
+                
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <Pagination
+                        currentPage={page}
+                        totalPages={totalPages}
+                        onPageChange={setPage}
+                        className="mt-6"
+                    />
+                )}
                 
                 {/* Add Category Modal */}
                 {isAddModalOpen && (

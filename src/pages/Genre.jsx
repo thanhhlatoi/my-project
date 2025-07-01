@@ -4,6 +4,7 @@ import Layout from '../layouts/layout.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import SearchBar from '../components/SearchBar.jsx';
 import DataTable from '../components/DataTable.jsx';
+import Pagination from '../components/Pagination.jsx';
 import { Edit2, Save, X, Calendar } from 'lucide-react';
 
 const Genre = () => {
@@ -14,31 +15,52 @@ const Genre = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(0);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchGenres();
-  }, []);
+  }, [page]);
+
+  // Handle search with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (page !== 0) {
+        setPage(0); // Reset to first page when searching
+      } else {
+        fetchGenres();
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Lấy danh sách thể loại
   const fetchGenres = async () => {
     setLoading(true);
+    setError(null); // Clear previous errors
     try {
-      const response = await GenreService.getAll(0, 10, 'id', 'asc');
+      console.log('Fetching genres with page:', page, 'searchTerm:', searchTerm);
+      const response = await GenreService.getAll(page, 10, 'id', 'asc', searchTerm);
       console.log('🔍 Full Genre API response:', response);
       console.log('🔍 Response data:', response?.data);
       
       let genres = [];
+      let pages = 1;
       
       if (response?.data) {
         // Try different structures
         if (response.data.data?.content) {
           genres = response.data.data.content;
+          pages = response.data.data.totalPages || 1;
           console.log('✅ Using structure: response.data.data.content');
         } else if (response.data.content) {
           genres = response.data.content;
+          pages = response.data.totalPages || 1;
           console.log('✅ Using structure: response.data.content');
         } else if (Array.isArray(response.data)) {
           genres = response.data;
+          pages = 1;
           console.log('✅ Using structure: response.data (array)');
         } else {
           console.log('❌ Unknown API structure, setting empty array');
@@ -48,10 +70,31 @@ const Genre = () => {
       
       console.log('📋 Final genres array:', genres);
       setGenres(genres || []);
+      setTotalPages(pages);
       
     } catch (error) {
-      console.error('❌ Error fetching genres:', error);
+      console.error("❌ Error fetching genres:", error);
       setGenres([]);
+      setTotalPages(1);
+      
+      // Better error handling
+      let errorMessage = "Failed to load genres. ";
+      if (error.response) {
+        console.error("Response status:", error.response.status);
+        console.error("Response data:", error.response.data);
+        
+        if (error.response.status === 500) {
+          errorMessage += "Server error occurred. Please try again later or contact support.";
+        } else if (error.response.data && error.response.data.message) {
+          errorMessage += "Reason: " + error.response.data.message;
+        }
+      } else if (error.message) {
+        errorMessage += "Reason: " + error.message;
+      }
+      
+      // Show error to user
+      setError(errorMessage);
+      console.error("Full error message:", errorMessage);
     } finally {
       setLoading(false);
     }
@@ -214,12 +257,12 @@ const Genre = () => {
         <div className="space-y-6">
           {/* Page Header */}
           <PageHeader
-            title="🎭 Genre Management"
-            description="Manage movie genres and categories"
+            title="🗂️ Genre Management"
+            description="Organize your content by genres"
             showAddButton={true}
             addButtonText="Add New Genre"
             onAddClick={() => setIsModalOpen(true)}
-            gradient="from-emerald-600 to-emerald-700"
+            gradient="from-blue-600 to-blue-700"
           />
 
           {/* Search Bar */}
@@ -232,6 +275,24 @@ const Genre = () => {
             onExportClick={() => console.log('Export genres')}
           />
 
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              <div className="flex justify-between items-start">
+                <p>{error}</p>
+                <button
+                  onClick={() => {
+                    setError(null);
+                    fetchGenres();
+                  }}
+                  className="ml-4 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Data Table */}
           <DataTable
             columns={columns}
@@ -242,6 +303,16 @@ const Genre = () => {
             customActions={customActions}
             emptyMessage="No genres found"
           />
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              className="mt-6"
+            />
+          )}
 
           {/* Add Genre Modal */}
           {isModalOpen && (

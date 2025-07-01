@@ -3,6 +3,7 @@ import Layout from '../layouts/layout.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import SearchBar from '../components/SearchBar.jsx';
 import DataTable from '../components/DataTable.jsx';
+import Pagination from '../components/Pagination.jsx';
 import performerService from '../api/PerformerService.js';
 import CreatePerformer from '../components/Create/CreatePerformer.jsx';
 import PerformerDetails from '../components/Update/PerformerDetails.jsx';
@@ -265,15 +266,11 @@ const PerformerPage = () => {
                 {/* Page Header */}
                 <PageHeader
                     title="🎭 Performer Management"
-                    description="Manage your list of performers and actors"
+                    description="Manage your talented performers"
                     showAddButton={true}
                     addButtonText="Add New Performer"
                     onAddClick={openAddModal}
-                    gradient="from-rose-600 to-rose-700"
-                    showPagination={totalPages > 1}
-                    currentPage={page}
-                    totalPages={totalPages}
-                    onPageChange={setPage}
+                    gradient="from-purple-600 to-pink-600"
                 />
                 
                 {/* Search Bar */}
@@ -297,6 +294,16 @@ const PerformerPage = () => {
                     onDelete={confirmDelete}
                     emptyMessage="No performers found"
                 />
+                
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <Pagination
+                        currentPage={page}
+                        totalPages={totalPages}
+                        onPageChange={setPage}
+                        className="mt-6"
+                    />
+                )}
                 
                 {/* Add Performer Modal */}
                 {isAddModalOpen && (

@@ -4,6 +4,7 @@ import { RefreshCw, Film, PlayCircle } from 'lucide-react';
 import Layout from '../layouts/layout.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import SearchBar from '../components/SearchBar.jsx';
+import Pagination from '../components/Pagination.jsx';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
 import CreateVideoFilm from '../components/Create/CreateVideoFilm.jsx';
 import VideoFilmService from "../api/VideoFilmService.js";
@@ -159,10 +160,6 @@ const VideoFilmPage = () => {
                     addButtonText="Thêm Video"
                     onAddClick={() => setIsAddModalOpen(true)}
                     gradient="from-red-600 to-pink-600"
-                    showPagination={totalPages > 1}
-                    currentPage={page}
-                    totalPages={totalPages}
-                    onPageChange={setPage}
                 />
 
                 {/* Search Bar */}
@@ -228,6 +225,16 @@ const VideoFilmPage = () => {
                             </div>
                         )}
                     </>
+                )}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <Pagination
+                        currentPage={page}
+                        totalPages={totalPages}
+                        onPageChange={setPage}
+                        className="mt-6"
+                    />
                 )}
 
                 {/* Add Video Modal */}

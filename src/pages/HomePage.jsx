@@ -12,6 +12,7 @@ import {
     BarChart3
 } from 'lucide-react';
 import Layout from '../layouts/layout.jsx';
+import PageHeader from '../components/PageHeader.jsx';
 
 const HomePage = () => {
     const stats = {
@@ -66,25 +67,13 @@ const HomePage = () => {
     return (
         <Layout>
             <div className="space-y-6">
-                {/* Welcome Header */}
-                <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 shadow-lg">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl font-bold text-white">Welcome to FilmDash</h1>
-                            <p className="text-blue-100 mt-2">Here's what's happening with your movie platform today.</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <button className="px-4 py-2 bg-white text-blue-700 rounded-lg hover:bg-blue-50 transition-colors shadow-md flex items-center gap-2 font-medium">
-                                <Download size={16} />
-                                Export Report
-                            </button>
-                            <button className="px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900 transition-colors flex items-center gap-2">
-                                <Calendar size={16} />
-                                Last 30 days
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                {/* Page Header */}
+                <PageHeader
+                    title="🎬 FilmDash Dashboard"
+                    description="Here's what's happening with your movie platform today."
+                    gradient="from-blue-600 to-blue-700"
+                    showAddButton={false}
+                />
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

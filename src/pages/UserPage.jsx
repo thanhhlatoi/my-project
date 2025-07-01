@@ -4,6 +4,7 @@ import Layout from '../layouts/layout.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import SearchBar from '../components/SearchBar.jsx';
 import DataTable from '../components/DataTable.jsx';
+import Pagination from '../components/Pagination.jsx';
 import userService from '../api/UserService.js';
 import CreateUser from '../components/Create/CreateUser.jsx';
 import UserDetails from '../components/Update/UserDetails.jsx';
@@ -291,15 +292,11 @@ const UserPage = () => {
                 {/* Page Header */}
                 <PageHeader
                     title="👥 User Management"
-                    description="Manage users and their access permissions"
+                    description="Manage your user accounts"
                     showAddButton={true}
                     addButtonText="Add New User"
                     onAddClick={openAddModal}
-                    gradient="from-purple-600 to-purple-700"
-                    showPagination={totalPages > 1}
-                    currentPage={page}
-                    totalPages={totalPages}
-                    onPageChange={setPage}
+                    gradient="from-green-600 to-green-700"
                 />
 
                 {/* Search Bar */}
@@ -323,6 +320,16 @@ const UserPage = () => {
                     onDelete={confirmDelete}
                     emptyMessage="No users found"
                 />
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <Pagination
+                        currentPage={page}
+                        totalPages={totalPages}
+                        onPageChange={setPage}
+                        className="mt-6"
+                    />
+                )}
 
                 {/* Modals */}
                 {isAddModalOpen && (

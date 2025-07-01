@@ -16,6 +16,7 @@ import VideoFilm from "./pages/VideoFilmPage";
 import WatchPage from "./pages/WatchPage.jsx";
 import AnalyticsPage from "./pages/AnalyticsPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
+import FavoriteManagementPage from "./pages/FavoriteManagementPage.jsx";
 
 function App() {
     // Kiểm tra xem có đang ở trang login hay không
@@ -32,6 +33,7 @@ function App() {
                     <Route path="/" element={<LoginForm />} />
                     <Route path="/dashboard" element={<HomePage />} />
                     <Route path="/HomePage" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/favorites" element={<Navigate to="/favorites-management" replace />} />
                     <Route path="/genre" element={<Genre />} />
                     <Route path="/FlimPage" element={<FilmPage />} />
                     <Route path="/film/:id" element={<FilmDetail />} />
@@ -43,6 +45,7 @@ function App() {
                     <Route path="/videoFilm" element={<VideoFilm />} />
                     <Route path="/analytics" element={<AnalyticsPage />} />
                     <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/favorites-management" element={<FavoriteManagementPage />} />
                     <Route path="/watch/:id" element={<WatchPage />} />
                 </Routes>
             </main>

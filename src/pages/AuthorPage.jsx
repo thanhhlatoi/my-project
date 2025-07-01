@@ -3,6 +3,7 @@ import Layout from '../layouts/layout.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import SearchBar from '../components/SearchBar.jsx';
 import DataTable from '../components/DataTable.jsx';
+import Pagination from '../components/Pagination.jsx';
 import authorService from '../api/AuthorService.js';
 import CreateAuthor from '../components/Create/CreateAuthor.jsx';
 import AuthorDetails from '../components/Update/AuthorDetails.jsx';
@@ -258,16 +259,12 @@ const AuthorsPage = () => {
             <div className="space-y-6">
                 {/* Page Header */}
                 <PageHeader
-                    title="👨‍🎬 Author Management"
-                    description="Manage your list of authors and directors"
+                    title="✍️ Author Management"
+                    description="Manage your talented authors"
                     showAddButton={true}
                     addButtonText="Add New Author"
                     onAddClick={openAddModal}
-                    gradient="from-teal-600 to-teal-700"
-                    showPagination={totalPages > 1}
-                    currentPage={page}
-                    totalPages={totalPages}
-                    onPageChange={setPage}
+                    gradient="from-indigo-600 to-purple-600"
                 />
 
                 {/* Search Bar */}
@@ -291,6 +288,16 @@ const AuthorsPage = () => {
                     onDelete={confirmDelete}
                     emptyMessage="No authors found"
                 />
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <Pagination
+                        currentPage={page}
+                        totalPages={totalPages}
+                        onPageChange={setPage}
+                        className="mt-6"
+                    />
+                )}
 
                 {/* Sử dụng component CreateAuthor */}
                 <CreateAuthor

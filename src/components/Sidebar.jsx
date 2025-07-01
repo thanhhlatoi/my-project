@@ -13,7 +13,8 @@ import {
     ChevronRight,
     PlaySquare,
     FolderOpen,
-    BarChart3
+    BarChart3,
+    Heart
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -39,6 +40,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     const menu = [
         { name: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/dashboard" },
         { name: "Film", icon: <Film size={20} />, path: "/FlimPage" },
+        { name: "User Favorites", icon: <Heart size={20} />, path: "/favorites-management" },
         { name: "Genre", icon: <Tags size={20} />, path: "/genre" },
         { name: "Author", icon: <BookOpen size={20} />, path: "/author" },
         { name: "Performer", icon: <User size={20} />, path: "/performer" },

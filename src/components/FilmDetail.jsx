@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import FilmService from '../api/FilmService';
 import Layout from '../layouts/layout.jsx';
 import { BASE_URL } from '../api/config.js';
+import FavoriteButton from './FavoriteButton.jsx';
 
 const FilmDetail = () => {
     const { id } = useParams();
@@ -37,7 +38,46 @@ const FilmDetail = () => {
                 navigate('/movies');
             } catch (error) {
                 console.error("Lỗi khi xóa phim:", error);
-                alert('Có lỗi xảy ra khi xóa phim.');
+                
+                // Handle relationship constraint errors with detailed instructions
+                if (error.isRelationshipError) {
+                    const confirmRetry = window.confirm(
+                        error.message + '\n\nBạn có muốn chuyển đến trang quản lý video để xóa các video liên quan không?'
+                    );
+                    if (confirmRetry) {
+                        navigate('/video-films');
+                    }
+                    return;
+                }
+                
+                // Handle other constraint errors
+                if (error.isConstraintError) {
+                    alert(error.message);
+                    return;
+                }
+                
+                // Handle 403 Forbidden
+                if (error.response?.status === 403) {
+                    alert('Bạn không có quyền xóa phim này. Vui lòng kiểm tra quyền tài khoản hoặc đăng nhập lại.');
+                    return;
+                }
+                
+                // Handle 404 Not Found
+                if (error.response?.status === 404) {
+                    alert('Phim không tồn tại hoặc đã được xóa trước đó.');
+                    navigate('/movies');
+                    return;
+                }
+                
+                // Handle network or other errors
+                if (!error.response) {
+                    alert('Lỗi kết nối mạng. Vui lòng kiểm tra kết nối internet và thử lại.');
+                    return;
+                }
+                
+                // Generic error fallback
+                const errorMsg = error.response?.data?.message || 'Có lỗi xảy ra khi xóa phim.';
+                alert(`Lỗi: ${errorMsg}`);
             }
         }
     };
@@ -238,6 +278,14 @@ const FilmDetail = () => {
                                     </svg>
                                     Xem phim
                                 </button>
+
+                                <FavoriteButton
+                                    movieId={movie.id}
+                                    size="lg"
+                                    variant="outline"
+                                    className="w-full justify-center"
+                                    readOnly={true}
+                                />
 
                                 <button
                                     onClick={handleEdit}

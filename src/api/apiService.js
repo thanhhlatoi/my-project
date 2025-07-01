@@ -51,11 +51,15 @@ const createApiService = (baseURL) => {
     // Các phương thức CRUD cơ bản
     return {
         // Lấy tất cả items, có hỗ trợ phân trang
-        getAll: async (page = 0, limit = 10, sortBy = 'id', order = 'asc') => {
+        getAll: async (page = 0, limit = 10, sortBy = 'id', order = 'asc', search = '') => {
             try {
-                const response = await apiClient.get('', {
-                    params: { page, limit, sortBy, order }
-                });
+                const params = { page, limit, sortBy, order };
+                if (search && search.trim()) {
+                    params.search = search.trim();
+                }
+                
+                console.log('API params:', params);
+                const response = await apiClient.get('', { params });
                 return response.data;
             } catch (error) {
                 console.error('Lỗi khi lấy danh sách:', error);
